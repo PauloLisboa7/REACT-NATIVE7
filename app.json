@@ -4,9 +4,9 @@
     "slug": "meuprimeiroapp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logopaulo.png",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/logopaulo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

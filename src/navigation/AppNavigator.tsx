@@ -4,6 +4,7 @@ import HomeScreen from '../screens/HomeScreen';
 import DetailsScreen from '../screens/DetailsSreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ListScreen from '../screens/ListScreen';
+import LoginScreen from '../screens/LoginScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +35,13 @@ export default function AppNavigator() {
         component={RegisterScreen}
         options={{
           headerTitle: 'Cadastro',
+        }}
+      />
+      <Stack.Screen 
+        name="Login"
+        component={LoginScreen}
+        options={{
+          headerTitle: 'Login',
         }}
       />
       <Stack.Screen 

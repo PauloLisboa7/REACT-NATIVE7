@@ -15,6 +15,9 @@ interface Usuario {
   email: string;
   telefone: string;
   data: string;
+  cpf?: string;
+  senha?: string; // se existir localmente (não recomendado)
+  uid?: string; // uid do Firebase Auth quando sincronizado
 }
 
 export default function ListScreen({ navigation }: any) {
@@ -118,6 +121,11 @@ export default function ListScreen({ navigation }: any) {
         <Text style={styles.cardTexto}>
           <Text style={styles.label}>Data:</Text> {item.data}
         </Text>
+        {item.cpf ? (
+          <Text style={styles.cardTexto}>
+            <Text style={styles.label}>CPF:</Text> {item.cpf}
+          </Text>
+        ) : null}
       </View>
       <TouchableOpacity
         style={styles.botaoDeletar}
