@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  BackHandler,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db, auth } from '../config/firebaseConfig';
@@ -25,6 +28,15 @@ export default function RegisterScreen({ navigation }: any) {
   const [telefoneError, setTelefoneError] = useState(false);
   const [cpfError, setCpfError] = useState(false);
   const [senhaError, setSenhaError] = useState(false);
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      navigation.popToTop();
+      return true;
+    });
+
+    return () => backHandler.remove();
+  }, [navigation]);
 
   const validarEmail = (email: string) => {
     const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -202,8 +214,18 @@ export default function RegisterScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.titulo}>Cadastro de Usuários</Text>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+    >
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={true}
+        scrollEventThrottle={16}
+        nestedScrollEnabled={true}
+      >
+        <Text style={styles.titulo}>Cadastro de Usuários</Text>
 
       <View style={styles.fieldContainer}>
         <Text style={styles.label}>Nome</Text>
@@ -349,83 +371,112 @@ export default function RegisterScreen({ navigation }: any) {
           <Text style={styles.botaoTexto}>VOLTAR</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  scrollView: {
+    flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
   },
   titulo: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '700',
     marginBottom: 30,
-    color: '#333',
+    color: '#1F2937',
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
   fieldContainer: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#333',
+    color: '#1F2937',
+    letterSpacing: 0.3,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
+    color: '#1F2937',
+    fontWeight: '500',
   },
   inputError: {
-    borderWidth: 1,
-    borderColor: '#f44336',
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderWidth: 1.5,
+    borderColor: '#EF4444',
+    borderRadius: 12,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
+    color: '#1F2937',
+    fontWeight: '500',
   },
   textoErro: {
-    color: '#f44336',
+    color: '#EF4444',
     fontSize: 12,
-    marginTop: 5,
+    marginTop: 6,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   botoesContainer: {
     marginTop: 30,
     marginBottom: 40,
+    gap: 12,
   },
   botaoSalvar: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
-    padding: 14,
-    marginBottom: 12,
+    backgroundColor: '#6366F1',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     alignItems: 'center',
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   botaoLista: {
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
-    padding: 14,
-    marginBottom: 12,
+    backgroundColor: '#10B981',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     alignItems: 'center',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   botaoVoltar: {
-    backgroundColor: '#757575',
-    borderRadius: 8,
-    padding: 14,
-    marginBottom: 12,
+    backgroundColor: '#EF4444',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     alignItems: 'center',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   botaoTexto: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });

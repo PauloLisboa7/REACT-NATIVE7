@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	View,
 	Text,
@@ -7,7 +7,13 @@ import {
 	TouchableOpacity,
 	Alert,
 	ActivityIndicator,
+	SafeAreaView,
+	ScrollView,
+	KeyboardAvoidingView,
+	Platform,
+	BackHandler,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebaseConfig';
 
@@ -15,6 +21,15 @@ export default function LoginScreen({ navigation }: any) {
 	const [email, setEmail] = useState('');
 	const [senha, setSenha] = useState('');
 	const [loading, setLoading] = useState(false);
+
+	useEffect(() => {
+		const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+			navigation.popToTop();
+			return true;
+		});
+
+		return () => backHandler.remove();
+	}, [navigation]);
 
 	const handleLogin = async () => {
 		if (!email || !senha) {
@@ -59,82 +74,167 @@ export default function LoginScreen({ navigation }: any) {
 	};
 
 	return (
-		<View style={styles.container}>
-			<Text style={styles.title}>Tela de Login</Text>
-
-			<TextInput
-				style={styles.input}
-				placeholder="Email"
-				placeholderTextColor="#999"
-				keyboardType="email-address"
-				autoCapitalize="none"
-				value={email}
-				onChangeText={setEmail}
-			/>
-
-			<TextInput
-				style={styles.input}
-				placeholder="Senha"
-				placeholderTextColor="#999"
-				secureTextEntry
-				value={senha}
-				onChangeText={setSenha}
-			/>
-
-			<TouchableOpacity
-				style={[styles.button, loading ? styles.buttonDisabled : null]}
-				onPress={handleLogin}
-				disabled={loading}
+		<SafeAreaView style={styles.safeArea}>
+			<KeyboardAvoidingView 
+				style={styles.container}
+				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+				keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
 			>
-				{loading ? (
-					<ActivityIndicator color="#fff" />
-				) : (
-					<Text style={styles.buttonText}>Entrar</Text>
-				)}
-			</TouchableOpacity>
-		</View>
+				<ScrollView 
+					showsVerticalScrollIndicator={false}
+					contentContainerStyle={styles.scrollContent}
+				>
+					<View style={styles.headerContainer}>
+						<MaterialCommunityIcons name="lock" size={56} color="#6366F1" />
+						<Text style={styles.title}>Login</Text>
+						<Text style={styles.subtitle}>Acesse sua conta</Text>
+					</View>
+
+					<View style={styles.formContainer}>
+						<View style={styles.inputGroup}>
+							<Text style={styles.label}>Email</Text>
+							<TextInput
+								style={styles.input}
+								placeholder="seu@email.com"
+								placeholderTextColor="#9CA3AF"
+								keyboardType="email-address"
+								autoCapitalize="none"
+								value={email}
+								onChangeText={setEmail}
+							/>
+						</View>
+
+						<View style={styles.inputGroup}>
+							<Text style={styles.label}>Senha</Text>
+							<TextInput
+								style={styles.input}
+								placeholder="••••••••"
+								placeholderTextColor="#9CA3AF"
+								secureTextEntry
+								value={senha}
+								onChangeText={setSenha}
+							/>
+						</View>
+
+						<TouchableOpacity
+							style={[styles.button, loading && styles.buttonDisabled]}
+							onPress={handleLogin}
+							disabled={loading}
+						>
+							{loading ? (
+								<ActivityIndicator color="#fff" />
+							) : (
+								<Text style={styles.buttonText}>Entrar</Text>
+							)}
+						</TouchableOpacity>
+					</View>
+
+					<View style={styles.footer}>
+						<Text style={styles.footerText}>Não tem conta?</Text>
+						<TouchableOpacity onPress={() => navigation.navigate('Register')}>
+							<Text style={styles.registerLink}>Cadastre-se aqui</Text>
+						</TouchableOpacity>
+					</View>
+				</ScrollView>
+			</KeyboardAvoidingView>
+		</SafeAreaView>
 	);
 }
 
 const styles = StyleSheet.create({
+	safeArea: {
+		flex: 1,
+		backgroundColor: '#F9FAFB',
+	},
 	container: {
 		flex: 1,
+		backgroundColor: '#F9FAFB',
+	},
+	scrollContent: {
+		flexGrow: 1,
 		justifyContent: 'center',
+		paddingHorizontal: 20,
+		paddingVertical: 40,
+	},
+	headerContainer: {
 		alignItems: 'center',
-		padding: 20,
-		backgroundColor: '#fff',
+		marginBottom: 40,
 	},
 	title: {
-		fontSize: 24,
-		fontWeight: 'bold',
-		marginBottom: 24,
+		fontSize: 32,
+		fontWeight: '700',
+		color: '#1F2937',
+		marginBottom: 8,
+		textAlign: 'center',
+	},
+	subtitle: {
+		fontSize: 16,
+		color: '#6B7280',
+		textAlign: 'center',
+		fontWeight: '400',
+	},
+	formContainer: {
+		marginBottom: 32,
+		gap: 16,
+	},
+	inputGroup: {
+		marginBottom: 4,
+	},
+	label: {
+		fontSize: 14,
+		fontWeight: '600',
+		marginBottom: 8,
+		color: '#1F2937',
+		letterSpacing: 0.3,
 	},
 	input: {
-		width: '100%',
-		borderWidth: 1,
-		borderColor: '#ddd',
-		borderRadius: 8,
-		paddingHorizontal: 12,
-		paddingVertical: 12,
+		borderWidth: 1.5,
+		borderColor: '#E5E7EB',
+		borderRadius: 12,
+		paddingHorizontal: 16,
+		paddingVertical: 14,
 		fontSize: 16,
-		backgroundColor: '#f9f9f9',
-		marginBottom: 12,
+		backgroundColor: '#FFFFFF',
+		color: '#1F2937',
+		fontWeight: '500',
 	},
 	button: {
-		width: '100%',
-		backgroundColor: '#4CAF50',
-		padding: 14,
-		borderRadius: 8,
+		backgroundColor: '#6366F1',
+		borderRadius: 12,
+		paddingVertical: 16,
+		paddingHorizontal: 20,
 		alignItems: 'center',
-		marginTop: 8,
+		marginTop: 12,
+		shadowColor: '#6366F1',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 4,
 	},
 	buttonDisabled: {
-		opacity: 0.7,
+		backgroundColor: '#C4B5FD',
+		shadowOpacity: 0.1,
 	},
 	buttonText: {
-		color: '#fff',
+		color: '#FFFFFF',
 		fontSize: 16,
-		fontWeight: '600',
+		fontWeight: '700',
+		letterSpacing: 0.5,
+	},
+	footer: {
+		alignItems: 'center',
+		gap: 4,
+	},
+	footerText: {
+		fontSize: 14,
+		color: '#6B7280',
+		fontWeight: '400',
+	},
+	registerLink: {
+		fontSize: 14,
+		color: '#6366F1',
+		fontWeight: '700',
+		letterSpacing: 0.3,
 	},
 });
 

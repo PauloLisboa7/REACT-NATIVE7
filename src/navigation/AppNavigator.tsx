@@ -14,6 +14,7 @@ export default function AppNavigator() {
       screenOptions={{
         headerShown: true,
         headerBackVisible: true,
+        animationEnabled: true,
       }}
     >
       <Stack.Screen 
@@ -21,6 +22,7 @@ export default function AppNavigator() {
         component={HomeScreen}
         options={{
           headerTitle: 'Início',
+          headerShown: false,
         }}
       />
       <Stack.Screen 

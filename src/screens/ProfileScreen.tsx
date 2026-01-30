@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  StyleSheet, 
+  ScrollView, 
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 
 export default function ProfileScreen({ navigation }: any) {
   const [nome, setNome] = useState('');
@@ -30,7 +40,16 @@ export default function ProfileScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView style={styles.scroll}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+    >
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={true}
+        scrollEventThrottle={16}
+      >
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Cadastro de Usuário</Text>
@@ -82,16 +101,20 @@ export default function ProfileScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
   container: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
     padding: 20,
     paddingTop: 40,
     paddingBottom: 40,
@@ -103,22 +126,25 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1a1a1a',
+    color: '#1F2937',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#6B7280',
+    textAlign: 'center',
+    fontWeight: '400',
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 25,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   inputGroup: {
     marginBottom: 20,
@@ -126,43 +152,52 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#1F2937',
     marginBottom: 8,
+    letterSpacing: 0.3,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#333',
-    backgroundColor: '#fafafa',
+    color: '#1F2937',
+    backgroundColor: '#F9FAFB',
+    fontWeight: '500',
   },
   buttonSalvar: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
+    backgroundColor: '#6366F1',
+    borderRadius: 12,
     paddingVertical: 16,
     marginTop: 10,
     marginBottom: 12,
     alignItems: 'center',
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
+    letterSpacing: 0.5,
   },
   buttonVoltar: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#D1D5DB',
   },
   buttonVoltarText: {
-    color: '#666',
+    color: '#4B5563',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });
