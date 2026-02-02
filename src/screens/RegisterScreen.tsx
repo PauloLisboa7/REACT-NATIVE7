@@ -10,24 +10,42 @@ import {
   KeyboardAvoidingView,
   Platform,
   BackHandler,
+  ActivityIndicator,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { db, auth } from '../config/firebaseConfig';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useFormValidation } from '../hooks';
+import { emailExists } from '../services/firebaseFirestoreService';
+import { messages } from '../config/constants';
 
 export default function RegisterScreen({ navigation }: any) {
+  const { signUp } = useAuth();
+  const { colors } = useTheme();
+  const { 
+    validateEmail, 
+    validatePassword, 
+    validateName, 
+    validateAge,
+    clearAllErrors,
+    getError 
+  } = useFormValidation();
+
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
-  const [telefone, setTelefone] = useState('');
-  const [cpf, setCpf] = useState('');
+  const [age, setAge] = useState('');
   const [senha, setSenha] = useState('');
+  const [confirmSenha, setConfirmSenha] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordMismatchError, setPasswordMismatchError] = useState(false);
+  const [emailDuplicateError, setEmailDuplicateError] = useState(false);
+  const [isEmailValid, setIsEmailValid] = useState(false);
 
-  const [nomeError, setNomeError] = useState(false);
-  const [emailError, setEmailError] = useState(false);
-  const [telefoneError, setTelefoneError] = useState(false);
-  const [cpfError, setCpfError] = useState(false);
-  const [senhaError, setSenhaError] = useState(false);
+  // Padrão para validar email com domínio completo
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -38,445 +56,350 @@ export default function RegisterScreen({ navigation }: any) {
     return () => backHandler.remove();
   }, [navigation]);
 
-  const validarEmail = (email: string) => {
-    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regexEmail.test(email);
-  };
+  const handleRegister = async () => {
+    clearAllErrors();
+    setPasswordMismatchError(false);
+    setEmailDuplicateError(false);
 
-  const validarTelefone = (telefone: string) => {
-    const apenasNumeros = telefone.replace(/\D/g, '');
-    return apenasNumeros.length === 11;
-  };
-
-  const validarCpf = (cpf: string) => {
-    const apenasNumeros = cpf.replace(/\D/g, '');
-    return apenasNumeros.length === 11;
-  };
-
-  const validarSenha = (senha: string) => {
-    return senha.length >= 6;
-  };
-
-  const validarNome = (nome: string) => {
-    return nome.trim().length >= 3;
-  };
-
-  const validarFormulario = () => {
-    let temErro = false;
-
-    if (!validarNome(nome)) {
-      setNomeError(true);
-      temErro = true;
-    } else {
-      setNomeError(false);
-    }
-
-    if (!validarEmail(email)) {
-      setEmailError(true);
-      temErro = true;
-    } else {
-      setEmailError(false);
-    }
-
-    if (!validarTelefone(telefone)) {
-      setTelefoneError(true);
-      temErro = true;
-    } else {
-      setTelefoneError(false);
-    }
-
-    if (!validarCpf(cpf)) {
-      setCpfError(true);
-      temErro = true;
-    } else {
-      setCpfError(false);
-    }
-
-    if (!validarSenha(senha)) {
-      setSenhaError(true);
-      temErro = true;
-    } else {
-      setSenhaError(false);
-    }
-
-    return !temErro;
-  };
-
-  const salvarDados = async () => {
-    if (!validarFormulario()) {
-      Alert.alert('Erro', 'Por favor, corrija os erros no formulário');
+    // Validações básicas
+    if (
+      !validateName(nome) ||
+      !validateEmail(email) ||
+      !validateAge(age) ||
+      !validatePassword(senha)
+    ) {
       return;
     }
 
+    // Validar se as senhas conferem
+    if (senha !== confirmSenha) {
+      setPasswordMismatchError(true);
+      Alert.alert('Aviso', messages.auth.passwordMismatch);
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      // Criar usuário no Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-      const createdUser = userCredential.user;
-
-      const novoUsuario = {
-        id: createdUser.uid,
-        nome: nome,
-        email: email,
-        telefone: telefone,
-        cpf: cpf,
-        dataCriacao: new Date().toLocaleDateString('pt-BR'),
-      };
-
-      // Salvar no AsyncStorage (local) sem senha
-      const dados = await AsyncStorage.getItem('usuarios');
-      let usuarios: any = [];
-
-      if (dados) {
-        try {
-          usuarios = JSON.parse(dados);
-          if (!Array.isArray(usuarios)) {
-            usuarios = [];
-          }
-        } catch (e) {
-          usuarios = [];
-        }
+      // Verificar se o email já existe
+      const emailAlreadyExists = await emailExists(email);
+      if (emailAlreadyExists) {
+        setEmailDuplicateError(true);
+        Alert.alert('Email já cadastrado', 'Este email já está registrado no sistema. Use outro email ou recupere sua senha.');
+        setLoading(false);
+        return;
       }
 
-      usuarios.push(novoUsuario);
-      await AsyncStorage.setItem('usuarios', JSON.stringify(usuarios));
-
-      // Salvar no Firebase Firestore (coleção 'usuarios') sem a senha
-      try {
-        await addDoc(collection(db, 'usuarios'), {
-          uid: novoUsuario.id,
-          nome: novoUsuario.nome,
-          email: novoUsuario.email,
-          telefone: novoUsuario.telefone,
-          cpf: novoUsuario.cpf,
-          dataCriacao: novoUsuario.dataCriacao,
-          timestamp: serverTimestamp(),
-        });
-      } catch (firebaseError) {
-        console.warn('Erro ao salvar no Firebase:', firebaseError);
-        Alert.alert('Aviso', 'Usuário criado em Auth, mas falhou ao salvar no Firestore. Verifique sua conexão.');
-      }
-
-      Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');
-
-      setNome('');
-      setEmail('');
-      setTelefone('');
-      setCpf('');
-      setSenha('');
-      setNomeError(false);
-      setEmailError(false);
-      setTelefoneError(false);
-      setCpfError(false);
-      setSenhaError(false);
-
-      navigation.navigate('List');
-    } catch (erro: any) {
-      console.error('Erro ao salvar:', erro);
-      let msg = 'Erro ao cadastrar usuário';
-      if (erro && erro.code) {
-        switch (erro.code) {
-          case 'auth/email-already-in-use':
-            msg = 'Email já está em uso';
-            break;
-          case 'auth/invalid-email':
-            msg = 'Email inválido';
-            break;
-          case 'auth/weak-password':
-            msg = 'Senha muito fraca (mínimo 6 caracteres)';
-            break;
-          default:
-            msg = erro.message || msg;
-        }
-      }
-      Alert.alert('Erro', msg);
+      const ageNum = parseInt(age, 10);
+      await signUp(email, senha, nome, ageNum);
+      
+      Alert.alert('Sucesso', messages.auth.registerSuccess);
+      navigation.navigate('Details');
+    } catch (error: any) {
+      const message = error.message || 'Erro ao realizar cadastro';
+      Alert.alert('Erro no Cadastro', message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const formatarTelefone = (texto: string) => {
-    const apenasNumeros = texto.replace(/\D/g, '');
-    
-    if (apenasNumeros.length === 0) return '';
-    if (apenasNumeros.length <= 2) return `(${apenasNumeros}`;
-    if (apenasNumeros.length <= 7) {
-      return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2)}`;
-    }
-    
-    return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 7)}-${apenasNumeros.slice(7, 11)}`;
-  };
-
-  const formatarCpf = (texto: string) => {
-    const apenasNumeros = texto.replace(/\D/g, '').slice(0, 11);
-    if (apenasNumeros.length === 0) return '';
-    if (apenasNumeros.length <= 3) return apenasNumeros;
-    if (apenasNumeros.length <= 6) return `${apenasNumeros.slice(0,3)}.${apenasNumeros.slice(3)}`;
-    if (apenasNumeros.length <= 9) return `${apenasNumeros.slice(0,3)}.${apenasNumeros.slice(3,6)}.${apenasNumeros.slice(6)}`;
-    return `${apenasNumeros.slice(0,3)}.${apenasNumeros.slice(3,6)}.${apenasNumeros.slice(6,9)}-${apenasNumeros.slice(9,11)}`;
-  };
+  const styles = createStyles(colors);
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
-    >
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={true}
-        scrollEventThrottle={16}
-        nestedScrollEnabled={true}
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <KeyboardAvoidingView 
+        style={[styles.container, { backgroundColor: colors.background }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
-        <Text style={styles.titulo}>Cadastro de Usuários</Text>
-
-      <View style={styles.fieldContainer}>
-        <Text style={styles.label}>Nome</Text>
-        {nomeError ? <TextInput
-          style={styles.inputError}
-          placeholder="Digite seu nome completo"
-          placeholderTextColor="#999"
-          value={nome}
-          onChangeText={(texto) => {
-            setNome(texto);
-            setNomeError(false);
-          }}
-        /> : <TextInput
-          style={styles.input}
-          placeholder="Digite seu nome completo"
-          placeholderTextColor="#999"
-          value={nome}
-          onChangeText={(texto) => {
-            setNome(texto);
-            setNomeError(false);
-          }}
-        />}
-        {nomeError ? <Text style={styles.textoErro}>Nome deve ter no mínimo 3 caracteres</Text> : null}
-      </View>
-
-      <View style={styles.fieldContainer}>
-        <Text style={styles.label}>Email</Text>
-        {emailError ? <TextInput
-          style={styles.inputError}
-          placeholder="Digite seu email"
-          placeholderTextColor="#999"
-          value={email}
-          onChangeText={(texto) => {
-            setEmail(texto);
-            setEmailError(false);
-          }}
-        /> : <TextInput
-          style={styles.input}
-          placeholder="Digite seu email"
-          placeholderTextColor="#999"
-          value={email}
-          onChangeText={(texto) => {
-            setEmail(texto);
-            setEmailError(false);
-          }}
-        />}
-        {emailError ? <Text style={styles.textoErro}>Email inválido</Text> : null}
-      </View>
-
-      <View style={styles.fieldContainer}>
-        <Text style={styles.label}>CPF</Text>
-        {cpfError ? <TextInput
-          style={styles.inputError}
-          placeholder="000.000.000-00"
-          placeholderTextColor="#999"
-          value={cpf}
-          onChangeText={(texto) => {
-            setCpf(formatarCpf(texto));
-            setCpfError(false);
-          }}
-        /> : <TextInput
-          style={styles.input}
-          placeholder="000.000.000-00"
-          placeholderTextColor="#999"
-          value={cpf}
-          onChangeText={(texto) => {
-            setCpf(formatarCpf(texto));
-            setCpfError(false);
-          }}
-        />}
-        {cpfError ? <Text style={styles.textoErro}>CPF deve conter 11 dígitos</Text> : null}
-      </View>
-
-      <View style={styles.fieldContainer}>
-        <Text style={styles.label}>Senha</Text>
-        {senhaError ? <TextInput
-          style={styles.inputError}
-          placeholder="Digite uma senha (mín. 6 caracteres)"
-          placeholderTextColor="#999"
-          secureTextEntry
-          value={senha}
-          onChangeText={(texto) => {
-            setSenha(texto);
-            setSenhaError(false);
-          }}
-        /> : <TextInput
-          style={styles.input}
-          placeholder="Digite uma senha (mín. 6 caracteres)"
-          placeholderTextColor="#999"
-          secureTextEntry
-          value={senha}
-          onChangeText={(texto) => {
-            setSenha(texto);
-            setSenhaError(false);
-          }}
-        />}
-        {senhaError ? <Text style={styles.textoErro}>Senha deve ter no mínimo 6 caracteres</Text> : null}
-      </View>
-
-      <View style={styles.fieldContainer}>
-        <Text style={styles.label}>Telefone</Text>
-        {telefoneError ? <TextInput
-          style={styles.inputError}
-          placeholder="(XX) XXXXX-XXXX"
-          placeholderTextColor="#999"
-          value={telefone}
-          onChangeText={(texto) => {
-            setTelefone(formatarTelefone(texto));
-            setTelefoneError(false);
-          }}
-        /> : <TextInput
-          style={styles.input}
-          placeholder="(XX) XXXXX-XXXX"
-          placeholderTextColor="#999"
-          value={telefone}
-          onChangeText={(texto) => {
-            setTelefone(formatarTelefone(texto));
-            setTelefoneError(false);
-          }}
-        />}
-        {telefoneError ? <Text style={styles.textoErro}>Telefone deve conter 11 dígitos</Text> : null}
-      </View>
-
-      <View style={styles.botoesContainer}>
-        <TouchableOpacity 
-          style={styles.botaoSalvar}
-          onPress={salvarDados}
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <Text style={styles.botaoTexto}>SALVAR</Text>
-        </TouchableOpacity>
+          <View style={styles.headerContainer}>
+            <MaterialCommunityIcons name="account-plus" size={56} color={colors.primary} />
+            <Text style={[styles.title, { color: colors.text }]}>Criar Conta</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Preencha os dados abaixo</Text>
+          </View>
 
-        <TouchableOpacity 
-          style={styles.botaoLista}
-          onPress={() => navigation.navigate('List')}
-        >
-          <Text style={styles.botaoTexto}>VER CADASTRADOS</Text>
-        </TouchableOpacity>
+          <View style={styles.formContainer}>
+            {/* Nome */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.text }]}>Nome Completo</Text>
+              <View style={[styles.inputWrapper, { borderColor: getError('name') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="João Silva"
+                  placeholderTextColor={colors.textSecondary}
+                  value={nome}
+                  onChangeText={setNome}
+                  editable={!loading}
+                />
+                {nome && !getError('name') && (
+                  <MaterialCommunityIcons name="check-circle" size={20} color={colors.success} style={styles.inputIcon} />
+                )}
+              </View>
+              {getError('name') && (
+                <Text style={[styles.errorText, { color: colors.danger }]}>{getError('name')}</Text>
+              )}
+            </View>
 
-        <TouchableOpacity 
-          style={styles.botaoVoltar}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.botaoTexto}>VOLTAR</Text>
-        </TouchableOpacity>
-      </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            {/* Email */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+              <View style={[styles.inputWrapper, emailDuplicateError && { borderColor: colors.danger }, { backgroundColor: colors.surface, borderColor: getError('email') ? colors.danger : colors.border }]}>
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="seu@email.com"
+                  placeholderTextColor={colors.textSecondary}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    setEmailDuplicateError(false);
+                    // Valida apenas se tiver @ e . (domínio completo)
+                    setIsEmailValid(emailRegex.test(text));
+                  }}
+                  editable={!loading}
+                />
+                {isEmailValid && !emailDuplicateError && (
+                  <MaterialCommunityIcons name="check-circle" size={20} color={colors.success} style={styles.inputIcon} />
+                )}
+                {emailDuplicateError && (
+                  <MaterialCommunityIcons name="alert-circle" size={20} color={colors.danger} style={styles.inputIcon} />
+                )}
+              </View>
+              {getError('email') && (
+                <Text style={[styles.errorText, { color: colors.danger }]}>{getError('email')}</Text>
+              )}
+              {emailDuplicateError && (
+                <Text style={[styles.errorText, { color: colors.danger }]}>Email já cadastrado no sistema</Text>
+              )}
+            </View>
+
+            {/* Idade */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.text }]}>Idade</Text>
+              <View style={[styles.inputWrapper, { borderColor: getError('age') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="18"
+                  placeholderTextColor={colors.textSecondary}
+                  keyboardType="numeric"
+                  value={age}
+                  onChangeText={setAge}
+                  editable={!loading}
+                />
+                {age && !getError('age') && (
+                  <MaterialCommunityIcons name="check-circle" size={20} color={colors.success} style={styles.inputIcon} />
+                )}
+              </View>
+              {getError('age') && (
+                <Text style={[styles.errorText, { color: colors.danger }]}>{getError('age')}</Text>
+              )}
+            </View>
+
+            {/* Senha */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.text }]}>Senha</Text>
+              <View style={[styles.inputWrapper, { borderColor: getError('password') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="••••••••"
+                  placeholderTextColor={colors.textSecondary}
+                  secureTextEntry={!showPassword}
+                  value={senha}
+                  onChangeText={setSenha}
+                  editable={!loading}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <MaterialCommunityIcons 
+                    name={showPassword ? 'eye-off' : 'eye'} 
+                    size={20} 
+                    color={colors.primary}
+                    style={styles.inputIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+              {getError('password') && (
+                <Text style={[styles.errorText, { color: colors.danger }]}>{getError('password')}</Text>
+              )}
+            </View>
+
+            {/* Confirmar Senha */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.text }]}>Confirmar Senha</Text>
+              <View style={[styles.inputWrapper, passwordMismatchError && { borderColor: colors.danger }, { backgroundColor: colors.surface, borderColor: getError('password') ? colors.danger : colors.border }]}>
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="••••••••"
+                  placeholderTextColor={colors.textSecondary}
+                  secureTextEntry={!showConfirmPassword}
+                  value={confirmSenha}
+                  onChangeText={(text) => {
+                    setConfirmSenha(text);
+                    setPasswordMismatchError(false);
+                  }}
+                  editable={!loading}
+                />
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <MaterialCommunityIcons 
+                    name={showConfirmPassword ? 'eye-off' : 'eye'} 
+                    size={20} 
+                    color={colors.primary}
+                    style={styles.inputIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+              {passwordMismatchError && (
+                <Text style={[styles.errorText, { color: colors.danger }]}>⚠️ As senhas não conferem</Text>
+              )}
+              {!passwordMismatchError && confirmSenha && senha === confirmSenha && (
+                <Text style={[styles.successText, { color: colors.success }]}>✓ Senhas conferem</Text>
+              )}
+            </View>
+
+            {/* Botão de Cadastro */}
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="account-plus" size={20} color="#fff" style={styles.buttonIcon} />
+                  <Text style={styles.buttonText}>Cadastrar</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Link para Login */}
+            <View style={styles.footer}>
+              <Text style={[styles.footerText, { color: colors.textSecondary }]}>Já tem conta?</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                <Text style={[styles.loginLink, { color: colors.primary }]}>Faça login aqui</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  scrollView: {
-    flex: 1,
-    padding: 20,
-  },
-  titulo: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 30,
-    color: '#1F2937',
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
-  fieldContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#1F2937',
-    letterSpacing: 0.3,
-  },
-  input: {
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    backgroundColor: '#FFFFFF',
-    color: '#1F2937',
-    fontWeight: '500',
-  },
-  inputError: {
-    borderWidth: 1.5,
-    borderColor: '#EF4444',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    backgroundColor: '#FFFFFF',
-    color: '#1F2937',
-    fontWeight: '500',
-  },
-  textoErro: {
-    color: '#EF4444',
-    fontSize: 12,
-    marginTop: 6,
-    fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-  botoesContainer: {
-    marginTop: 30,
-    marginBottom: 40,
-    gap: 12,
-  },
-  botaoSalvar: {
-    backgroundColor: '#6366F1',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  botaoLista: {
-    backgroundColor: '#10B981',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  botaoVoltar: {
-    backgroundColor: '#EF4444',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    shadowColor: '#EF4444',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  botaoTexto: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+    },
+    container: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 20,
+      paddingVertical: 30,
+    },
+    headerContainer: {
+      alignItems: 'center',
+      marginBottom: 40,
+    },
+    title: {
+      fontSize: 32,
+      fontWeight: '700',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: 16,
+      textAlign: 'center',
+      fontWeight: '400',
+    },
+    formContainer: {
+      marginBottom: 32,
+      gap: 16,
+    },
+    inputGroup: {
+      marginBottom: 4,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 8,
+      letterSpacing: 0.3,
+    },
+    inputWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1.5,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+    },
+    input: {
+      flex: 1,
+      paddingHorizontal: 4,
+      paddingVertical: 14,
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    inputIcon: {
+      marginHorizontal: 8,
+    },
+    errorText: {
+      fontSize: 12,
+      marginTop: 4,
+      fontWeight: '500',
+    },
+    successText: {
+      fontSize: 12,
+      marginTop: 4,
+      fontWeight: '500',
+    },
+    button: {
+      flexDirection: 'row',
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 12,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+      gap: 8,
+    },
+    buttonDisabled: {
+      backgroundColor: colors.primaryLight,
+      shadowOpacity: 0.1,
+    },
+    buttonIcon: {
+      marginRight: 4,
+    },
+    buttonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+    },
+    footer: {
+      alignItems: 'center',
+      gap: 4,
+      marginTop: 16,
+    },
+    footerText: {
+      fontSize: 14,
+      fontWeight: '400',
+    },
+    loginLink: {
+      fontSize: 14,
+      fontWeight: '700',
+      letterSpacing: 0.3,
+    },
+  });
+}
