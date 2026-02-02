@@ -13,12 +13,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }: any) {
   const { userData } = useAuth();
   const { colors, isDark, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [isPressed, setIsPressed] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
 
@@ -81,8 +83,8 @@ export default function HomeScreen({ navigation }: any) {
             source={require('../../assets/logopaulo.png')}
             style={styles.logo}
           />
-          <Text style={[styles.title, { color: colors.text }]}>Bem-vindo, {userName || 'Usuário'}!</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Gerencie seus cadastros com facilidade</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('screens.home.welcome')}, {userName || 'Usuário'}!</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('screens.home.welcome')}</Text>
         </View>
 
         {/* Buttons Section */}
@@ -102,8 +104,8 @@ export default function HomeScreen({ navigation }: any) {
               <MaterialCommunityIcons name="file-document-plus" size={32} color="#6366F1" />
             </View>
             <View style={styles.buttonContent}>
-              <Text style={styles.buttonTitle}>Cadastro</Text>
-              <Text style={styles.buttonSubtitle}>Novo usuário</Text>
+              <Text style={styles.buttonTitle}>{t('screens.register.title')}</Text>
+              <Text style={styles.buttonSubtitle}>{t('common.loading')}</Text>
             </View>
           </TouchableOpacity>
 

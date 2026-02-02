@@ -21,6 +21,11 @@ export interface UserData extends DocumentData {
   name: string;
   age: number;
   avatar?: string;
+  isFavorite?: boolean;
+  role?: 'admin' | 'user' | 'moderator';
+  group?: string;
+  twoFactorEnabled?: boolean;
+  twoFactorPhone?: string;
   createdAt: string;
   updatedAt: string;
 }

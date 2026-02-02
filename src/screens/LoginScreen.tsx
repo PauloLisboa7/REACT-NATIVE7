@@ -17,12 +17,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useFormValidation, useBiometric } from '../hooks';
 import { messages } from '../config/constants';
 
 export default function LoginScreen({ navigation }: any) {
 	const { login } = useAuth();
 	const { colors } = useTheme();
+	const { t } = useLanguage();
 	const { validateEmail, validatePassword, clearAllErrors, getError } = useFormValidation();
 	const { biometricAvailable, biometryType, authenticate } = useBiometric();
 	
@@ -68,11 +70,11 @@ export default function LoginScreen({ navigation }: any) {
 
 		try {
 			await login(email, senha);
-			Alert.alert('Sucesso', messages.auth.loginSuccess);
+			Alert.alert(t('common.success'), t('screens.login.signIn'));
 			navigation.navigate('Details');
 		} catch (error: any) {
-			const message = error.message || 'Erro ao efetuar login';
-			Alert.alert('Erro no Login', message);
+			const message = error.message || t('screens.login.loginError');
+			Alert.alert(t('common.error'), message);
 		} finally {
 			setLoading(false);
 		}
@@ -101,7 +103,7 @@ export default function LoginScreen({ navigation }: any) {
 				Alert.alert('Sucesso', 'Bem-vindo de volta!');
 				navigation.navigate('Details');
 			} catch (error: any) {
-				Alert.alert('Erro', error.message || 'Erro ao fazer login com biometria');
+				Alert.alert(t('common.error'), error.message || t('screens.login.loginError'));
 			} finally {
 				setLoading(false);
 			}
@@ -127,13 +129,13 @@ export default function LoginScreen({ navigation }: any) {
 				>
 					<View style={styles.headerContainer}>
 						<MaterialCommunityIcons name="lock" size={56} color={colors.primary} />
-						<Text style={[styles.title, { color: colors.text }]}>Login</Text>
-						<Text style={[styles.subtitle, { color: colors.textSecondary }]}>Acesse sua conta</Text>
+						<Text style={[styles.title, { color: colors.text }]}>{t('screens.login.title')}</Text>
+						<Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('screens.login.signIn')}</Text>
 					</View>
 
 					<View style={styles.formContainer}>
 						<View style={styles.inputGroup}>
-							<Text style={[styles.label, { color: colors.text }]}>Email</Text>
+							<Text style={[styles.label, { color: colors.text }]}>{t('screens.login.email')}</Text>
 							<View style={[styles.inputWrapper, { borderColor: getError('email') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
 								<TextInput
 									style={[styles.input, { color: colors.text }]}
@@ -159,9 +161,9 @@ export default function LoginScreen({ navigation }: any) {
 
 						<View style={styles.inputGroup}>
 							<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-								<Text style={[styles.label, { color: colors.text }]}>Senha</Text>
+								<Text style={[styles.label, { color: colors.text }]}>{t('screens.login.password')}</Text>
 								<TouchableOpacity onPress={handleForgotPassword}>
-									<Text style={[styles.forgotPasswordLink, { color: colors.primary }]}>Esqueci minha senha</Text>
+									<Text style={[styles.forgotPasswordLink, { color: colors.primary }]}>{t('screens.login.forgotPassword')}</Text>
 								</TouchableOpacity>
 							</View>
 							<View style={[styles.inputWrapper, { borderColor: getError('password') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
@@ -197,7 +199,7 @@ export default function LoginScreen({ navigation }: any) {
 							) : (
 								<>
 									<MaterialCommunityIcons name="login" size={20} color="#fff" style={styles.buttonIcon} />
-									<Text style={styles.buttonText}>Entrar</Text>
+									<Text style={styles.buttonText}>{t('screens.login.signIn')}</Text>
 								</>
 							)}
 						</TouchableOpacity>
@@ -220,9 +222,9 @@ export default function LoginScreen({ navigation }: any) {
 					</View>
 
 					<View style={styles.footer}>
-						<Text style={[styles.footerText, { color: colors.textSecondary }]}>Não tem conta?</Text>
+						<Text style={[styles.footerText, { color: colors.textSecondary }]}>{t('screens.login.noAccount')}</Text>
 						<TouchableOpacity onPress={() => navigation.navigate('Register')}>
-							<Text style={[styles.registerLink, { color: colors.primary }]}>Cadastre-se aqui</Text>
+							<Text style={[styles.registerLink, { color: colors.primary }]}>{t('screens.login.signUp')}</Text>
 						</TouchableOpacity>
 					</View>
 				</ScrollView>

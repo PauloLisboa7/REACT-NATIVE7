@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useFormValidation } from '../hooks';
 import { emailExists } from '../services/firebaseFirestoreService';
 import { messages } from '../config/constants';
@@ -23,6 +24,7 @@ import { messages } from '../config/constants';
 export default function RegisterScreen({ navigation }: any) {
   const { signUp } = useAuth();
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const { 
     validateEmail, 
     validatePassword, 
@@ -85,7 +87,7 @@ export default function RegisterScreen({ navigation }: any) {
       const emailAlreadyExists = await emailExists(email);
       if (emailAlreadyExists) {
         setEmailDuplicateError(true);
-        Alert.alert('Email já cadastrado', 'Este email já está registrado no sistema. Use outro email ou recupere sua senha.');
+        Alert.alert(t('screens.register.registerError'), t('common.error'));
         setLoading(false);
         return;
       }
@@ -93,11 +95,11 @@ export default function RegisterScreen({ navigation }: any) {
       const ageNum = parseInt(age, 10);
       await signUp(email, senha, nome, ageNum);
       
-      Alert.alert('Sucesso', messages.auth.registerSuccess);
+      Alert.alert(t('common.success'), t('common.success'));
       navigation.navigate('Details');
     } catch (error: any) {
-      const message = error.message || 'Erro ao realizar cadastro';
-      Alert.alert('Erro no Cadastro', message);
+      const message = error.message || t('screens.register.registerError');
+      Alert.alert(t('common.error'), message);
     } finally {
       setLoading(false);
     }
@@ -118,14 +120,14 @@ export default function RegisterScreen({ navigation }: any) {
         >
           <View style={styles.headerContainer}>
             <MaterialCommunityIcons name="account-plus" size={56} color={colors.primary} />
-            <Text style={[styles.title, { color: colors.text }]}>Criar Conta</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Preencha os dados abaixo</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('screens.register.title')}</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('common.loading')}</Text>
           </View>
 
           <View style={styles.formContainer}>
             {/* Nome */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Nome Completo</Text>
+              <Text style={[styles.label, { color: colors.text }]}>{t('screens.register.name')}</Text>
               <View style={[styles.inputWrapper, { borderColor: getError('name') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -146,7 +148,7 @@ export default function RegisterScreen({ navigation }: any) {
 
             {/* Email */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+              <Text style={[styles.label, { color: colors.text }]}>{t('screens.register.email')}</Text>
               <View style={[styles.inputWrapper, emailDuplicateError && { borderColor: colors.danger }, { backgroundColor: colors.surface, borderColor: getError('email') ? colors.danger : colors.border }]}>
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -180,7 +182,7 @@ export default function RegisterScreen({ navigation }: any) {
 
             {/* Idade */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Idade</Text>
+              <Text style={[styles.label, { color: colors.text }]}>{t('screens.details.age')}</Text>
               <View style={[styles.inputWrapper, { borderColor: getError('age') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -202,7 +204,7 @@ export default function RegisterScreen({ navigation }: any) {
 
             {/* Senha */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Senha</Text>
+              <Text style={[styles.label, { color: colors.text }]}>{t('screens.login.password')}</Text>
               <View style={[styles.inputWrapper, { borderColor: getError('password') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
