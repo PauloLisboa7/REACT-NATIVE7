@@ -82,7 +82,7 @@ export default function LoginScreen({ navigation }: any) {
 
 	const handleBiometricLogin = async () => {
 		if (!usuarioBiometriaSalvo) {
-			Alert.alert('Aviso', 'Nenhum usuário foi configurado para biometria. Vá até a tela de usuários e selecione um.');
+			Alert.alert(t('common.warning'), t('screens.login.noBiometricUser'));
 			return;
 		}
 
@@ -95,12 +95,12 @@ export default function LoginScreen({ navigation }: any) {
 				const senhaSalva = await AsyncStorage.getItem(`biometry_password_${usuarioBiometriaSalvo}`);
 				
 				if (!senhaSalva) {
-					Alert.alert('Erro', 'Credenciais não encontradas. Por favor, faça login normalmente.');
+					Alert.alert(t('common.error'), t('screens.login.biometricCredentialsNotFound'));
 					return;
 				}
 
 				await login(usuarioBiometriaSalvo, senhaSalva);
-				Alert.alert('Sucesso', 'Bem-vindo de volta!');
+				Alert.alert(t('common.success'), t('screens.login.signIn'));
 				navigation.navigate('Details');
 			} catch (error: any) {
 				Alert.alert(t('common.error'), error.message || t('screens.login.loginError'));

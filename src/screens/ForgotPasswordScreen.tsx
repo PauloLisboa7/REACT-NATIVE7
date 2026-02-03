@@ -15,11 +15,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useFormValidation } from '../hooks';
 
 export default function ForgotPasswordScreen({ navigation }: any) {
   const { resetPassword } = useAuth();
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const { validateEmail, clearAllErrors, getError } = useFormValidation();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,12 +44,12 @@ export default function ForgotPasswordScreen({ navigation }: any) {
       await resetPassword(email);
       setEmailSent(true);
       Alert.alert(
-        'Sucesso',
-        'Email de reset de senha enviado. Verifique sua caixa de entrada.'
+        t('common.success'),
+        t('screens.forgotPassword.successMessage')
       );
     } catch (error: any) {
-      const message = error.message || 'Erro ao enviar email de reset';
-      Alert.alert('Erro', message);
+      const message = error.message || t('screens.forgotPassword.error');
+      Alert.alert(t('common.error'), message);
     } finally {
       setLoading(false);
     }

@@ -8,21 +8,37 @@ import {
   Image,
   ScrollView,
   BackHandler,
+  Modal,
+  Switch,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { sendLocalNotification } from '../services/notificationService';
+import { clearAllCache } from '../services/cacheService';
+import { Language } from '../i18n/translations';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }: any) {
   const { userData } = useAuth();
   const { colors, isDark, toggleTheme } = useTheme();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [isPressed, setIsPressed] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [offlineMode, setOfflineMode] = useState(false);
+
+  const languageOptions: { label: string; value: Language }[] = [
+    { label: 'Português', value: 'pt' },
+    { label: 'English', value: 'en' },
+    { label: 'Español', value: 'es' },
+  ];
 
   useEffect(() => {
     console.log('HomeScreen montado');
@@ -32,10 +48,83 @@ export default function HomeScreen({ navigation }: any) {
       const primeiroNome = userData.name.split(' ')[0];
       setUserName(primeiroNome);
     }
+    
+    carregarConfiguracoes();
+    
     return () => {
       console.log('HomeScreen desmontado');
     };
   }, [userData]);
+
+  const carregarConfiguracoes = async () => {
+    try {
+      const notif = await AsyncStorage.getItem('notificationsEnabled');
+      const offline = await AsyncStorage.getItem('offlineMode');
+      if (notif !== null) setNotificationsEnabled(JSON.parse(notif));
+      if (offline !== null) setOfflineMode(JSON.parse(offline));
+    } catch (erro) {
+      console.error('Erro ao carregar configurações:', erro);
+    }
+  };
+
+  const atualizarNotificacoes = async (value: boolean) => {
+    setNotificationsEnabled(value);
+    await AsyncStorage.setItem('notificationsEnabled', JSON.stringify(value));
+
+    if (value) {
+      await sendLocalNotification({
+        title: 'Notificações Ativadas',
+        body: 'Você receberá notificações de agora em diante',
+      });
+    }
+  };
+
+  const atualizarOfflineMode = async (value: boolean) => {
+    setOfflineMode(value);
+    await AsyncStorage.setItem('offlineMode', JSON.stringify(value));
+
+    if (value) {
+      await sendLocalNotification({
+        title: t('screens.settings.title'),
+        body: t('messages.syncData'),
+      });
+    }
+  };
+
+  const limparCache = async () => {
+    Alert.alert(
+      'Limpar Cache',
+      'Tem certeza que deseja limpar o cache? Isso removerá dados armazenados localmente.',
+      [
+        { text: t('common.cancel'), onPress: () => {} },
+        {
+          text: 'Limpar',
+          onPress: async () => {
+            try {
+              console.log('Limpando cache...');
+              await clearAllCache();
+              Alert.alert('Sucesso', 'Cache limpo com sucesso!');
+            } catch (erro: any) {
+              console.error('Erro ao limpar cache:', erro);
+              Alert.alert('Erro', erro.message || 'Erro ao limpar cache');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const mudarIdioma = async (novoIdioma: Language) => {
+    try {
+      await setLanguage(novoIdioma);
+      await sendLocalNotification({
+        title: t('common.language'),
+        body: 'Idioma alterado com sucesso',
+      });
+    } catch (erro) {
+      console.error('Erro ao alterar idioma:', erro);
+    }
+  };
 
   const handlePressIn = (id: string) => {
     setIsPressed(id);
@@ -63,14 +152,14 @@ export default function HomeScreen({ navigation }: any) {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Theme Toggle Button */}
+        {/* Settings Button */}
         <View style={styles.themeToggleContainer}>
           <TouchableOpacity
             style={[styles.themeToggleButton, { backgroundColor: colors.surfaceSecondary }]}
-            onPress={toggleTheme}
+            onPress={() => setSettingsModalVisible(true)}
           >
             <MaterialCommunityIcons 
-              name={isDark ? "white-balance-sunny" : "moon-waning-crescent"} 
+              name="cog" 
               size={24} 
               color={colors.primary}
             />
@@ -84,7 +173,7 @@ export default function HomeScreen({ navigation }: any) {
             style={styles.logo}
           />
           <Text style={[styles.title, { color: colors.text }]}>{t('screens.home.welcome')}, {userName || 'Usuário'}!</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('screens.home.welcome')}</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('screens.home.manageUsers')}</Text>
         </View>
 
         {/* Buttons Section */}
@@ -105,7 +194,7 @@ export default function HomeScreen({ navigation }: any) {
             </View>
             <View style={styles.buttonContent}>
               <Text style={styles.buttonTitle}>{t('screens.register.title')}</Text>
-              <Text style={styles.buttonSubtitle}>{t('common.loading')}</Text>
+              <Text style={styles.buttonSubtitle}>{t('screens.home.newUser')}</Text>
             </View>
           </TouchableOpacity>
 
@@ -124,8 +213,8 @@ export default function HomeScreen({ navigation }: any) {
               <MaterialCommunityIcons name="account-multiple" size={32} color="#10B981" />
             </View>
             <View style={styles.buttonContent}>
-              <Text style={styles.buttonTitle}>Cadastrados</Text>
-              <Text style={styles.buttonSubtitle}>Ver lista</Text>
+              <Text style={styles.buttonTitle}>{t('screens.home.registeredUsers')}</Text>
+              <Text style={styles.buttonSubtitle}>{t('screens.home.viewList')}</Text>
             </View>
           </TouchableOpacity>
 
@@ -145,11 +234,230 @@ export default function HomeScreen({ navigation }: any) {
             </View>
             <View style={styles.buttonContent}>
               <Text style={styles.buttonTitle}>Login</Text>
-              <Text style={styles.buttonSubtitle}>Acessar conta</Text>
+              <Text style={styles.buttonSubtitle}>{t('screens.home.loginAccess')}</Text>
             </View>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Modal de Configurações */}
+      <Modal
+        visible={settingsModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setSettingsModalVisible(false)}
+      >
+        <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {t('screens.settings.title')}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setSettingsModalVisible(false)}
+                style={styles.closeButton}
+              >
+                <MaterialCommunityIcons
+                  name="close"
+                  size={24}
+                  color={colors.text}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              contentContainerStyle={styles.modalScrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Tema */}
+              <View style={[styles.settingSection, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  {t('screens.settings.appearance')}
+                </Text>
+
+                <View style={styles.settingItem}>
+                  <View style={styles.settingContent}>
+                    <MaterialCommunityIcons
+                      name={isDark ? 'moon-waning-crescent' : 'white-balance-sunny'}
+                      size={20}
+                      color={colors.primary}
+                    />
+                    <Text style={[styles.settingLabel, { color: colors.text }]}>
+                      {t('screens.settings.darkMode')}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={toggleTheme}
+                    style={[styles.toggleButton, { backgroundColor: colors.primary }]}
+                  >
+                    <MaterialCommunityIcons
+                      name={isDark ? 'moon-waning-crescent' : 'white-balance-sunny'}
+                      size={16}
+                      color="#fff"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Notificações */}
+              <View style={[styles.settingSection, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  {t('screens.settings.notifications')}
+                </Text>
+
+                <View style={styles.settingItem}>
+                  <View style={styles.settingContent}>
+                    <MaterialCommunityIcons
+                      name="bell"
+                      size={20}
+                      color={notificationsEnabled ? colors.primary : colors.textSecondary}
+                    />
+                    <Text style={[styles.settingLabel, { color: colors.text }]}>
+                      {t('screens.settings.enableNotifications')}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={notificationsEnabled}
+                    onValueChange={atualizarNotificacoes}
+                    thumbColor={notificationsEnabled ? colors.primary : colors.border}
+                    trackColor={{ false: colors.border, true: colors.primaryLight }}
+                  />
+                </View>
+              </View>
+
+              {/* Idioma */}
+              <View style={[styles.settingSection, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  {t('common.language')}
+                </Text>
+
+                <View style={styles.languageOptions}>
+                  {languageOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.languageOption,
+                        language === option.value && {
+                          backgroundColor: colors.primaryLight,
+                        },
+                        { borderBottomColor: colors.border },
+                      ]}
+                      onPress={() => mudarIdioma(option.value)}
+                    >
+                      <Text
+                        style={[
+                          styles.languageOptionText,
+                          {
+                            color: language === option.value ? colors.primary : colors.text,
+                            fontWeight: language === option.value ? '600' : '500',
+                          },
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                      {language === option.value && (
+                        <MaterialCommunityIcons
+                          name="check-circle"
+                          size={24}
+                          color={colors.primary}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Armazenamento */}
+              <View style={[styles.settingSection, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  {t('screens.settings.storage')}
+                </Text>
+
+                <View style={styles.settingItem}>
+                  <View style={styles.settingContent}>
+                    <MaterialCommunityIcons
+                      name="wifi-off"
+                      size={20}
+                      color={offlineMode ? colors.warning : colors.textSecondary}
+                    />
+                    <View style={styles.settingTextContainer}>
+                      <Text style={[styles.settingLabel, { color: colors.text }]}>
+                        {t('screens.settings.offlineMode')}
+                      </Text>
+                      <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                        {t('screens.settings.offlineModeDesc')}
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={offlineMode}
+                    onValueChange={atualizarOfflineMode}
+                    thumbColor={offlineMode ? colors.warning : colors.border}
+                    trackColor={{ false: colors.border, true: colors.primaryLight }}
+                  />
+                </View>
+
+                <TouchableOpacity style={styles.settingItem} onPress={limparCache}>
+                  <View style={styles.settingContent}>
+                    <MaterialCommunityIcons
+                      name="delete"
+                      size={20}
+                      color={colors.danger}
+                    />
+                    <View style={styles.settingTextContainer}>
+                      <Text style={[styles.settingLabel, { color: colors.text }]}>
+                        {t('screens.settings.clearCache')}
+                      </Text>
+                      <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                        {t('screens.settings.clearCacheDesc')}
+                      </Text>
+                    </View>
+                  </View>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={20}
+                    color={colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* Sobre */}
+              <View style={[styles.settingSection, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  {t('screens.settings.about')}
+                </Text>
+
+                <View style={styles.aboutItem}>
+                  <Text style={[styles.aboutLabel, { color: colors.text }]}>
+                    Nome do App
+                  </Text>
+                  <Text style={[styles.aboutValue, { color: colors.textSecondary }]}>
+                    REACT-NATIVE7
+                  </Text>
+                </View>
+
+                <View style={styles.aboutItem}>
+                  <Text style={[styles.aboutLabel, { color: colors.text }]}>
+                    Versão
+                  </Text>
+                  <Text style={[styles.aboutValue, { color: colors.textSecondary }]}>
+                    1.0.0
+                  </Text>
+                </View>
+
+                <View style={styles.aboutItem}>
+                  <Text style={[styles.aboutLabel, { color: colors.text }]}>
+                    Desenvolvedor
+                  </Text>
+                  <Text style={[styles.aboutValue, { color: colors.textSecondary }]}>
+                    Paulo Lisboa
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -264,5 +572,109 @@ const createStyles = (colors: any, spacing: any) =>
       fontSize: 13,
       fontWeight: '400',
       color: colors.textSecondary,
+    },
+    // Modal Styles
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingTop: spacing.md,
+      maxHeight: '80%',
+    },
+    modalScrollContent: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.lg,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+    },
+    closeButton: {
+      padding: spacing.sm,
+    },
+    settingSection: {
+      marginTop: spacing.md,
+      borderRadius: 12,
+      padding: spacing.md,
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: spacing.md,
+      textTransform: 'uppercase',
+    },
+    settingItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    settingContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      flex: 1,
+    },
+    settingTextContainer: {
+      flex: 1,
+    },
+    settingLabel: {
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    settingDescription: {
+      fontSize: 13,
+      fontWeight: '400',
+      marginTop: spacing.xs,
+    },
+    toggleButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    languageOptions: {
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    languageOption: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      borderBottomWidth: 1,
+    },
+    languageOptionText: {
+      fontSize: 16,
+    },
+    aboutItem: {
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    aboutLabel: {
+      fontSize: 14,
+      fontWeight: '500',
+      marginBottom: spacing.xs,
+    },
+    aboutValue: {
+      fontSize: 16,
+      fontWeight: '600',
     },
   });

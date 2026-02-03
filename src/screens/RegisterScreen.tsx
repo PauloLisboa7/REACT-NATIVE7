@@ -76,7 +76,7 @@ export default function RegisterScreen({ navigation }: any) {
     // Validar se as senhas conferem
     if (senha !== confirmSenha) {
       setPasswordMismatchError(true);
-      Alert.alert('Aviso', messages.auth.passwordMismatch);
+      Alert.alert(t('common.warning'), t('screens.register.passwordMismatch'));
       return;
     }
 

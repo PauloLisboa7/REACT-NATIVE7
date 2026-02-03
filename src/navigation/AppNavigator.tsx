@@ -8,7 +8,6 @@ import LoginScreen from '../screens/LoginScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import DashboardScreen from '../screens/DashboardScreen';
-import SettingsScreen from '../screens/SettingsScreen';
 import ActivityHistoryScreen from '../screens/ActivityHistoryScreen';
 
 const Stack = createNativeStackNavigator();
@@ -77,14 +76,6 @@ export default function AppNavigator() {
         component={DashboardScreen}
         options={{
           headerTitle: 'Dashboard',
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen 
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          headerTitle: 'Configurações',
           headerShown: false,
         }}
       />

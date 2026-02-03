@@ -16,12 +16,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { updateUser } from '../services/firebaseFirestoreService';
 import { useFormValidation } from '../hooks';
 
 export default function EditProfileScreen({ navigation }: any) {
   const { user, userData, logout } = useAuth();
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const { validateName, validateAge, clearAllErrors, getError } = useFormValidation();
 
   const [nome, setNome] = useState(userData?.name || '');
@@ -43,7 +45,7 @@ export default function EditProfileScreen({ navigation }: any) {
     }
 
     if (!user) {
-      Alert.alert('Erro', 'Usuário não autenticado');
+      Alert.alert(t('common.error'), t('screens.editProfile.notAuthenticated'));
       return;
     }
 
@@ -56,11 +58,11 @@ export default function EditProfileScreen({ navigation }: any) {
         age: ageNum,
       });
 
-      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+      Alert.alert(t('common.success'), t('screens.editProfile.updated'));
       navigation.goBack();
     } catch (error: any) {
-      const message = error.message || 'Erro ao atualizar perfil';
-      Alert.alert('Erro', message);
+      const message = error.message || t('screens.editProfile.error');
+      Alert.alert(t('common.error'), message);
     } finally {
       setLoading(false);
     }
@@ -68,19 +70,19 @@ export default function EditProfileScreen({ navigation }: any) {
 
   const handleLogout = async () => {
     Alert.alert(
-      'Confirmar Logout',
-      'Tem certeza que deseja sair?',
+      t('screens.editProfile.confirmLogout'),
+      t('screens.editProfile.logoutMessage'),
       [
-        { text: 'Cancelar', onPress: () => {}, style: 'cancel' },
+        { text: t('common.cancel'), onPress: () => {}, style: 'cancel' },
         {
-          text: 'Logout',
+          text: t('screens.editProfile.logout'),
           onPress: async () => {
             try {
               setLoading(true);
               await logout();
               navigation.navigate('Home');
             } catch (error: any) {
-              Alert.alert('Erro', 'Erro ao fazer logout');
+              Alert.alert(t('common.error'), t('screens.editProfile.errorLogout'));
             } finally {
               setLoading(false);
             }

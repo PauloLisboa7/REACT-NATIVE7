@@ -10,8 +10,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function ProfileScreen({ navigation }: any) {
+  const { colors } = useTheme();
+  const { t } = useLanguage();
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [idade, setIdade] = useState('');
@@ -25,11 +29,11 @@ export default function ProfileScreen({ navigation }: any) {
 
   const handleSalvar = () => {
     if (!nome || !email || !idade) {
-      Alert.alert('Aviso', 'Preencha todos os campos!');
+      Alert.alert(t('common.warning'), t('screens.editProfile.fillAllFields'));
       return;
     }
     console.log('Cadastro salvo:', { nome, email, idade });
-    Alert.alert('Sucesso', `Usuário ${nome} cadastrado com sucesso!`);
+    Alert.alert(t('common.success'), `${t('screens.editProfile.userRegisteredSuccessfully')} ${nome} ${t('screens.editProfile.registeredSuccessfully')}`);
     setNome('');
     setEmail('');
     setIdade('');

@@ -11,12 +11,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebaseConfig';
 
 export default function DetailsScreen({ navigation }: any) {
   const { colors } = useTheme();
   const { userData } = useAuth();
+  const { t } = useLanguage();
   const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,21 +33,21 @@ export default function DetailsScreen({ navigation }: any) {
 
   const handleLogout = async () => {
     Alert.alert(
-      'Sair da conta',
-      'Tem certeza que deseja fazer logout?',
+      t('screens.details.logoutConfirmTitle'),
+      t('screens.details.logoutConfirmMessage'),
       [
         {
-          text: 'Cancelar',
+          text: t('common.cancel'),
           onPress: () => {},
         },
         {
-          text: 'Sair',
+          text: t('screens.details.logout'),
           onPress: async () => {
             try {
               await signOut(auth);
               navigation.navigate('Home');
             } catch (erro) {
-              Alert.alert('Erro', 'Não foi possível fazer logout');
+              Alert.alert(t('common.error'), t('screens.details.logoutError'));
               console.error(erro);
             }
           },
@@ -61,8 +63,8 @@ export default function DetailsScreen({ navigation }: any) {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.headerContainer}>
           <MaterialCommunityIcons name="check-circle" size={56} color={colors.success} />
-          <Text style={[styles.title, { color: colors.text }]}>Bem-vindo, {userName || 'Usuário'}!</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Você está logado no sistema</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('screens.details.welcome')}, {userName || 'Usuário'}!</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('screens.details.youAreLoggedIn')}</Text>
         </View>
 
         <View style={styles.buttonsContainer}>
@@ -71,7 +73,7 @@ export default function DetailsScreen({ navigation }: any) {
             onPress={() => navigation.navigate('Home')}
           >
             <MaterialCommunityIcons name="home" size={24} color="#FFFFFF" />
-            <Text style={styles.buttonText}>Voltar para Início</Text>
+            <Text style={styles.buttonText}>{t('screens.details.backToHome')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -79,7 +81,7 @@ export default function DetailsScreen({ navigation }: any) {
             onPress={handleLogout}
           >
             <MaterialCommunityIcons name="logout" size={24} color="#FFFFFF" />
-            <Text style={styles.buttonText}>Fazer Logout</Text>
+            <Text style={styles.buttonText}>{t('screens.details.logout')}</Text>
           </TouchableOpacity>
         </View>
       </View>

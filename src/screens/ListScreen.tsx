@@ -272,49 +272,65 @@ export default function ListScreen({ navigation }: any) {
   };
 
   const exportarDados = async () => {
-    Alert.alert(t('screens.list.export'), t('common.loading'), [
-      { text: t('common.cancel'), onPress: () => {}, style: 'cancel' },
-      {
-        text: 'CSV',
-        onPress: async () => {
-          try {
-            const filePath = await exportUsersAsCSV(usuariosFiltrados);
-            await shareExportedFile(filePath, 'usuarios.csv');
-
-            if (user) {
-              await logActivity(user.uid, 'export', 'Dados exportados em CSV', user.uid);
-            }
-
-            await sendLocalNotification({
-              title: t('screens.list.export'),
-              body: t('messages.savedSuccessfully'),
-            });
-          } catch (erro) {
-            Alert.alert(t('common.error'), t('common.error'));
-          }
+    Alert.alert(
+      t('screens.list.export'),
+      t('screens.list.selectFormat'),
+      [
+        { 
+          text: t('common.cancel'), 
+          onPress: () => {}, 
+          style: 'cancel' 
         },
-      },
-      {
-        text: 'JSON',
-        onPress: async () => {
-          try {
-            const filePath = await exportUsersAsJSON(usuariosFiltrados);
-            await shareExportedFile(filePath, 'usuarios.json');
+        {
+          text: 'CSV',
+          onPress: async () => {
+            try {
+              console.log('Iniciando exportação CSV...');
+              const filePath = await exportUsersAsCSV(usuariosFiltrados);
+              console.log('CSV salvo em:', filePath);
+              
+              await shareExportedFile(filePath, 'usuarios.csv');
 
-            if (user) {
-              await logActivity(user.uid, 'export', 'Dados exportados em JSON', user.uid);
+              if (user) {
+                await logActivity(user.uid, 'export', 'Dados exportados em CSV', user.uid);
+              }
+
+              await sendLocalNotification({
+                title: t('screens.list.export'),
+                body: t('messages.savedSuccessfully'),
+              });
+            } catch (erro: any) {
+              console.error('Erro na exportação CSV:', erro);
+              Alert.alert(t('common.error'), erro.message || t('screens.list.errorExportingCsv'));
             }
-
-            await sendLocalNotification({
-              title: t('screens.list.export'),
-              body: t('messages.savedSuccessfully'),
-            });
-          } catch (erro) {
-            Alert.alert(t('common.error'), t('common.error'));
-          }
+          },
         },
-      },
-    ]);
+        {
+          text: 'JSON',
+          onPress: async () => {
+            try {
+              console.log('Iniciando exportação JSON...');
+              const filePath = await exportUsersAsJSON(usuariosFiltrados);
+              console.log('JSON salvo em:', filePath);
+              
+              await shareExportedFile(filePath, 'usuarios.json');
+
+              if (user) {
+                await logActivity(user.uid, 'export', 'Dados exportados em JSON', user.uid);
+              }
+
+              await sendLocalNotification({
+                title: t('screens.list.export'),
+                body: t('messages.savedSuccessfully'),
+              });
+            } catch (erro: any) {
+              console.error('Erro na exportação JSON:', erro);
+              Alert.alert(t('common.error'), erro.message || t('screens.list.errorExportingJson'));
+            }
+          },
+        },
+      ]
+    );
   };
 
   const styles = createStyles(colors);
@@ -486,7 +502,7 @@ export default function ListScreen({ navigation }: any) {
         <View style={styles.vazioContainer}>
           <MaterialCommunityIcons name="account-multiple-outline" size={56} color={colors.textSecondary} />
           <Text style={[styles.textoVazio, { color: colors.textSecondary }]}>
-            {usuarios.length === 0 ? t('screens.list.noUsers') : 'Nenhum resultado'}
+            {usuarios.length === 0 ? t('screens.list.noUsers') : t('screens.list.noResults')}
           </Text>
         </View>
       )}
@@ -505,11 +521,6 @@ export default function ListScreen({ navigation }: any) {
         <TouchableOpacity style={[styles.botaoDashboard, { backgroundColor: colors.success }]} onPress={() => navigation.navigate('Dashboard')}>
           <MaterialCommunityIcons name="chart-bar" size={20} color="#fff" />
           <Text style={styles.botaoTexto}>{t('screens.dashboard.title')}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.botaoSettings, { backgroundColor: colors.textSecondary }]} onPress={() => navigation.navigate('Settings')}>
-          <MaterialCommunityIcons name="cog" size={20} color="#fff" />
-          <Text style={styles.botaoTexto}>{t('screens.settings.title')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -574,7 +585,6 @@ function createStyles(colors: any) {
     botaoNovo: { flexDirection: 'row', flex: 1, minWidth: '48%', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', elevation: 4 },
     botaoExportar: { flexDirection: 'row', flex: 1, minWidth: '48%', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', elevation: 4 },
     botaoDashboard: { flexDirection: 'row', flex: 1, minWidth: '48%', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', elevation: 4 },
-    botaoSettings: { flexDirection: 'row', flex: 1, minWidth: '48%', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', elevation: 4 },
     botaoTexto: { color: '#FFFFFF', fontSize: 12, fontWeight: '700', marginLeft: 4 },
   });
 }
