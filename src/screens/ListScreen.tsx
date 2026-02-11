@@ -345,6 +345,8 @@ export default function ListScreen({ navigation }: any) {
               value={editingValue}
               onChangeText={setEditingValue}
               autoFocus
+              autoCorrect={false}
+              spellCheck={false}
             />
             <TouchableOpacity
               onPress={() => salvarEdicaoInline(item)}
@@ -449,6 +451,8 @@ export default function ListScreen({ navigation }: any) {
           placeholderTextColor={colors.textSecondary}
           value={searchText}
           onChangeText={setSearchText}
+          autoCorrect={false}
+          spellCheck={false}
         />
         {searchText.length > 0 && (
           <TouchableOpacity onPress={() => setSearchText('')}>

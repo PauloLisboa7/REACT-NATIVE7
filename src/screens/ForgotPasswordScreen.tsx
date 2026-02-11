@@ -122,6 +122,8 @@ export default function ForgotPasswordScreen({ navigation }: any) {
                       // Valida apenas se tiver @ e . (domínio completo)
                       setIsEmailValid(emailRegex.test(text));
                     }}
+                    autoCorrect={false}
+                    spellCheck={false}
                   />
                   {isEmailValid && !getError('email') && (
                     <MaterialCommunityIcons 

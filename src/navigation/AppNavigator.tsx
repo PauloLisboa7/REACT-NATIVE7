@@ -1,92 +1,19 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import HomeScreen from '../screens/HomeScreen';
-import DetailsScreen from '../screens/DetailsSreen';
-import RegisterScreen from '../screens/RegisterScreen';
-import ListScreen from '../screens/ListScreen';
-import LoginScreen from '../screens/LoginScreen';
-import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
-import EditProfileScreen from '../screens/EditProfileScreen';
-import DashboardScreen from '../screens/DashboardScreen';
-import ActivityHistoryScreen from '../screens/ActivityHistoryScreen';
-
-const Stack = createNativeStackNavigator();
+import { View, ActivityIndicator } from 'react-native';
+import AuthStack from './AuthStack';
+import AppStack from './AppStack';
+import { useAuth } from '../context/AuthContext';
 
 export default function AppNavigator() {
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: true,
-        headerBackVisible: true,
-        animationEnabled: true,
-      }}
-    >
-      <Stack.Screen 
-        name="Home" 
-        component={HomeScreen}
-        options={{
-          headerTitle: 'Início',
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen 
-        name="Details" 
-        component={DetailsScreen}
-        options={{
-          headerTitle: 'Detalhes',
-        }}
-      />
-      <Stack.Screen 
-        name="Register" 
-        component={RegisterScreen}
-        options={{
-          headerTitle: 'Cadastro',
-        }}
-      />
-      <Stack.Screen 
-        name="Login"
-        component={LoginScreen}
-        options={{
-          headerTitle: 'Login',
-        }}
-      />
-      <Stack.Screen 
-        name="ForgotPassword"
-        component={ForgotPasswordScreen}
-        options={{
-          headerTitle: 'Recuperar Senha',
-        }}
-      />
-      <Stack.Screen 
-        name="List" 
-        component={ListScreen}
-        options={{
-          headerTitle: 'Usuários',
-        }}
-      />
-      <Stack.Screen 
-        name="EditProfile"
-        component={EditProfileScreen}
-        options={{
-          headerTitle: 'Editar Perfil',
-        }}
-      />
-      <Stack.Screen 
-        name="Dashboard"
-        component={DashboardScreen}
-        options={{
-          headerTitle: 'Dashboard',
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen 
-        name="ActivityHistory"
-        component={ActivityHistoryScreen}
-        options={{
-          headerTitle: 'Histórico',
-          headerShown: false,
-        }}
-      />
-    </Stack.Navigator>
-  );
+  const { loading, isAuthenticated } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return isAuthenticated ? <AppStack /> : <AuthStack />;
 }

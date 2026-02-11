@@ -10,6 +10,7 @@ import {
   where,
   Query,
   DocumentData,
+  onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 
@@ -149,4 +150,25 @@ export const emailExists = async (email: string): Promise<boolean> => {
   } catch (error: any) {
     throw new Error(`Erro ao verificar email: ${error.message}`);
   }
+};
+
+/**
+ * Observa mudanças na coleção de usuários e retorna a contagem atual
+ */
+export const onUsersCountChanged = (
+  callback: (count: number) => void
+): (() => void) => {
+  const usersCol = collection(db, USERS_COLLECTION);
+  const unsubscribe = onSnapshot(
+    usersCol,
+    (snapshot) => {
+      callback(snapshot.size);
+    },
+    (error) => {
+      console.error('Erro no listener de usuários:', error);
+      callback(0);
+    }
+  );
+
+  return unsubscribe;
 };

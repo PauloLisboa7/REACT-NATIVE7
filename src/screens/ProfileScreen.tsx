@@ -69,6 +69,8 @@ export default function ProfileScreen({ navigation }: any) {
               value={nome}
               onChangeText={setNome}
               placeholderTextColor="#bbb"
+              autoCorrect={false}
+              spellCheck={false}
             />
           </View>
 
@@ -81,6 +83,9 @@ export default function ProfileScreen({ navigation }: any) {
               onChangeText={setEmail}
               placeholderTextColor="#bbb"
               keyboardType="email-address"
+              autoCorrect={false}
+              spellCheck={false}
+              autoCapitalize="none"
             />
           </View>
 
@@ -93,6 +98,8 @@ export default function ProfileScreen({ navigation }: any) {
               onChangeText={setIdade}
               placeholderTextColor="#bbb"
               keyboardType="numeric"
+              autoCorrect={false}
+              spellCheck={false}
             />
           </View>
 

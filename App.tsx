@@ -5,6 +5,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import { ThemeProvider } from './src/context/ThemeContext';
 import { LanguageProvider } from './src/contexts/LanguageContext';
 import AppNavigator from './src/navigation/AppNavigator';
+import { navigationRef } from './src/navigation/RootNavigation';
 import './src/config/firebaseConfig'; // Initialize Firebase
 
 export default function App() {
@@ -13,7 +14,7 @@ export default function App() {
       <ThemeProvider>
         <LanguageProvider>
           <AuthProvider>
-            <NavigationContainer>
+            <NavigationContainer ref={navigationRef}>
               <AppNavigator />
               <StatusBar style="auto" />
             </NavigationContainer>

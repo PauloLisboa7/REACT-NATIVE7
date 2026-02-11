@@ -61,28 +61,31 @@ export default function DetailsScreen({ navigation }: any) {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.headerContainer}>
-          <MaterialCommunityIcons name="check-circle" size={56} color={colors.success} />
-          <Text style={[styles.title, { color: colors.text }]}>{t('screens.details.welcome')}, {userName || 'Usuário'}!</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('screens.details.youAreLoggedIn')}</Text>
-        </View>
-
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity 
-            style={[styles.buttonHome, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
+        <View style={styles.themeToggleContainer}>
+          <TouchableOpacity
+            style={[styles.themeToggleButton, { backgroundColor: colors.surfaceSecondary }]}
             onPress={() => navigation.navigate('Home')}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <MaterialCommunityIcons name="home" size={24} color="#FFFFFF" />
-            <Text style={styles.buttonText}>{t('screens.details.backToHome')}</Text>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.primary} />
           </TouchableOpacity>
+        </View>
+        <View style={styles.centerContent}>
+          <View style={styles.headerContainer}>
+            <MaterialCommunityIcons name="check-circle" size={56} color={colors.success} />
+            <Text style={[styles.title, { color: colors.text }]}>{t('screens.details.welcome')}, {userName || 'Usuário'}!</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('screens.details.youAreLoggedIn')}</Text>
+          </View>
 
-          <TouchableOpacity 
-            style={[styles.buttonLogout, { backgroundColor: colors.danger, shadowColor: colors.danger }]}
-            onPress={handleLogout}
-          >
-            <MaterialCommunityIcons name="logout" size={24} color="#FFFFFF" />
-            <Text style={styles.buttonText}>{t('screens.details.logout')}</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity 
+              style={[styles.buttonLogout, { backgroundColor: colors.danger, shadowColor: colors.danger }]}
+              onPress={handleLogout}
+            >
+              <MaterialCommunityIcons name="logout" size={24} color="#FFFFFF" />
+              <Text style={styles.buttonText}>{t('screens.details.logout')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </SafeAreaView>
@@ -98,7 +101,7 @@ function createStyles(colors: any) {
       flex: 1,
       paddingHorizontal: 20,
       paddingVertical: 40,
-      justifyContent: 'center',
+      justifyContent: 'flex-start',
     },
     headerContainer: {
       alignItems: 'center',
@@ -148,6 +151,26 @@ function createStyles(colors: any) {
       fontWeight: '700',
       letterSpacing: 0.5,
       marginLeft: 8,
+    },
+    themeToggleContainer: {
+      flexDirection: 'row',
+      justifyContent: 'flex-start',
+      alignItems: 'center',
+      marginBottom: 12,
+      width: '100%',
+      paddingHorizontal: 0,
+    },
+    themeToggleButton: {
+      width: 50,
+      height: 50,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    centerContent: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   });
 }

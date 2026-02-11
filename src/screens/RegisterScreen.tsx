@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Platform,
   BackHandler,
   ActivityIndicator,
+  InputAccessoryView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,6 +20,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useFormValidation } from '../hooks';
 import { emailExists } from '../services/firebaseFirestoreService';
+import { onUsersCountChanged } from '../services/firebaseFirestoreService';
 import { messages } from '../config/constants';
 
 export default function RegisterScreen({ navigation }: any) {
@@ -45,6 +47,12 @@ export default function RegisterScreen({ navigation }: any) {
   const [passwordMismatchError, setPasswordMismatchError] = useState(false);
   const [emailDuplicateError, setEmailDuplicateError] = useState(false);
   const [isEmailValid, setIsEmailValid] = useState(false);
+  const [usersCount, setUsersCount] = useState<number | null>(null);
+
+  const senhaRef = useRef<any>(null);
+  const confirmSenhaRef = useRef<any>(null);
+  const [senhaFocused, setSenhaFocused] = useState(false);
+  const [confirmFocused, setConfirmFocused] = useState(false);
 
   // Padrão para validar email com domínio completo
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -55,8 +63,43 @@ export default function RegisterScreen({ navigation }: any) {
       return true;
     });
 
-    return () => backHandler.remove();
+    // Real-time listener para quantidade de usuários
+    const unsubscribe = onUsersCountChanged((count) => {
+      setUsersCount(count);
+    });
+
+    return () => {
+      backHandler.remove();
+      unsubscribe();
+    };
   }, [navigation]);
+
+  // If the system autofills the password, force focus so keyboard appears and user can edit
+  useEffect(() => {
+    if (senha !== '' && !senhaFocused) {
+      const t = setTimeout(() => {
+        try {
+          senhaRef.current?.focus();
+        } catch (e) {
+          // ignore
+        }
+      }, 100);
+      return () => clearTimeout(t);
+    }
+  }, [senha, senhaFocused]);
+
+  useEffect(() => {
+    if (confirmSenha !== '' && !confirmFocused) {
+      const t = setTimeout(() => {
+        try {
+          confirmSenhaRef.current?.focus();
+        } catch (e) {
+          // ignore
+        }
+      }, 100);
+      return () => clearTimeout(t);
+    }
+  }, [confirmSenha, confirmFocused]);
 
   const handleRegister = async () => {
     clearAllErrors();
@@ -108,7 +151,10 @@ export default function RegisterScreen({ navigation }: any) {
   const styles = createStyles(colors);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <>
+      <InputAccessoryView nativeID="senhaAccessory"><View style={{ height: 0 }} /></InputAccessoryView>
+      <InputAccessoryView nativeID="confirmAccessory"><View style={{ height: 0 }} /></InputAccessoryView>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView 
         style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -117,11 +163,21 @@ export default function RegisterScreen({ navigation }: any) {
         <ScrollView 
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="always"
         >
+          <TouchableOpacity 
+            style={[styles.backButton, { backgroundColor: colors.surfaceSecondary }]}
+            onPress={() => navigation.goBack()}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.primary} />
+          </TouchableOpacity>
+
           <View style={styles.headerContainer}>
             <MaterialCommunityIcons name="account-plus" size={56} color={colors.primary} />
             <Text style={[styles.title, { color: colors.text }]}>{t('screens.register.title')}</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('common.loading')}</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {usersCount === null ? 'Carregando...' : `${usersCount} usuário${usersCount === 1 ? '' : 's'} cadastrad${usersCount === 1 ? 'o' : 'os'}`}
+            </Text>
           </View>
 
           <View style={styles.formContainer}>
@@ -136,6 +192,8 @@ export default function RegisterScreen({ navigation }: any) {
                   value={nome}
                   onChangeText={setNome}
                   editable={!loading}
+                  autoCorrect={false}
+                  spellCheck={false}
                 />
                 {nome && !getError('name') && (
                   <MaterialCommunityIcons name="check-circle" size={20} color={colors.success} style={styles.inputIcon} />
@@ -164,6 +222,8 @@ export default function RegisterScreen({ navigation }: any) {
                     setIsEmailValid(emailRegex.test(text));
                   }}
                   editable={!loading}
+                  autoCorrect={false}
+                  spellCheck={false}
                 />
                 {isEmailValid && !emailDuplicateError && (
                   <MaterialCommunityIcons name="check-circle" size={20} color={colors.success} style={styles.inputIcon} />
@@ -192,6 +252,8 @@ export default function RegisterScreen({ navigation }: any) {
                   value={age}
                   onChangeText={setAge}
                   editable={!loading}
+                  autoCorrect={false}
+                  spellCheck={false}
                 />
                 {age && !getError('age') && (
                   <MaterialCommunityIcons name="check-circle" size={20} color={colors.success} style={styles.inputIcon} />
@@ -205,24 +267,33 @@ export default function RegisterScreen({ navigation }: any) {
             {/* Senha */}
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: colors.text }]}>{t('screens.login.password')}</Text>
-              <View style={[styles.inputWrapper, { borderColor: getError('password') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
-                <TextInput
-                  style={[styles.input, { color: colors.text }]}
-                  placeholder="••••••••"
-                  placeholderTextColor={colors.textSecondary}
-                  secureTextEntry={!showPassword}
-                  value={senha}
-                  onChangeText={setSenha}
-                  editable={!loading}
-                />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <MaterialCommunityIcons 
-                    name={showPassword ? 'eye-off' : 'eye'} 
-                    size={20} 
-                    color={colors.primary}
-                    style={styles.inputIcon}
+              <View>
+                <View style={[styles.inputWrapper, { borderColor: getError('password') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
+                  <TextInput
+                    ref={senhaRef}
+                    style={[styles.input, { color: colors.text }]}
+                    placeholder="••••••••"
+                    placeholderTextColor={colors.textSecondary}
+                    secureTextEntry={!showPassword}
+                    value={senha}
+                    onChangeText={setSenha}
+                    editable={!loading}
+                    onFocus={() => setSenhaFocused(true)}
+                    onBlur={() => setSenhaFocused(false)}
+                    inputAccessoryViewID="senhaAccessory"
+                    autoCorrect={false}
+                    spellCheck={false}
+                    autoCapitalize="none"
                   />
-                </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                    <MaterialCommunityIcons 
+                      name={showPassword ? 'eye-off' : 'eye'} 
+                      size={20} 
+                      color={colors.primary}
+                      style={styles.inputIcon}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
               {getError('password') && (
                 <Text style={[styles.errorText, { color: colors.danger }]}>{getError('password')}</Text>
@@ -232,27 +303,36 @@ export default function RegisterScreen({ navigation }: any) {
             {/* Confirmar Senha */}
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: colors.text }]}>Confirmar Senha</Text>
-              <View style={[styles.inputWrapper, passwordMismatchError && { borderColor: colors.danger }, { backgroundColor: colors.surface, borderColor: getError('password') ? colors.danger : colors.border }]}>
-                <TextInput
-                  style={[styles.input, { color: colors.text }]}
-                  placeholder="••••••••"
-                  placeholderTextColor={colors.textSecondary}
-                  secureTextEntry={!showConfirmPassword}
-                  value={confirmSenha}
-                  onChangeText={(text) => {
-                    setConfirmSenha(text);
-                    setPasswordMismatchError(false);
-                  }}
-                  editable={!loading}
-                />
-                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                  <MaterialCommunityIcons 
-                    name={showConfirmPassword ? 'eye-off' : 'eye'} 
-                    size={20} 
-                    color={colors.primary}
-                    style={styles.inputIcon}
+              <View>
+                <View style={[styles.inputWrapper, passwordMismatchError && { borderColor: colors.danger }, { backgroundColor: colors.surface, borderColor: getError('password') ? colors.danger : colors.border }]}>
+                  <TextInput
+                    ref={confirmSenhaRef}
+                    style={[styles.input, { color: colors.text }]}
+                    placeholder="••••••••"
+                    placeholderTextColor={colors.textSecondary}
+                    secureTextEntry={!showConfirmPassword}
+                    value={confirmSenha}
+                    onChangeText={(text) => {
+                      setConfirmSenha(text);
+                      setPasswordMismatchError(false);
+                    }}
+                    editable={!loading}
+                    onFocus={() => setConfirmFocused(true)}
+                    onBlur={() => setConfirmFocused(false)}
+                    inputAccessoryViewID="confirmAccessory"
+                    autoCorrect={false}
+                    spellCheck={false}
+                    autoCapitalize="none"
                   />
-                </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                    <MaterialCommunityIcons 
+                      name={showConfirmPassword ? 'eye-off' : 'eye'} 
+                      size={20} 
+                      color={colors.primary}
+                      style={styles.inputIcon}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
               {passwordMismatchError && (
                 <Text style={[styles.errorText, { color: colors.danger }]}>⚠️ As senhas não conferem</Text>
@@ -289,6 +369,7 @@ export default function RegisterScreen({ navigation }: any) {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </>
   );
 }
 
@@ -304,6 +385,14 @@ function createStyles(colors: any) {
       flexGrow: 1,
       paddingHorizontal: 20,
       paddingVertical: 30,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 16,
     },
     headerContainer: {
       alignItems: 'center',

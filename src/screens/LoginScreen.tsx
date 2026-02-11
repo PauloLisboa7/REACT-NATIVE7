@@ -11,6 +11,7 @@ import {
 	KeyboardAvoidingView,
 	Platform,
 	BackHandler,
+	InputAccessoryView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -71,7 +72,7 @@ export default function LoginScreen({ navigation }: any) {
 		try {
 			await login(email, senha);
 			Alert.alert(t('common.success'), t('screens.login.signIn'));
-			navigation.navigate('Details');
+			// Navegação será controlada pelo listener de autenticação (persistência de sessão)
 		} catch (error: any) {
 			const message = error.message || t('screens.login.loginError');
 			Alert.alert(t('common.error'), message);
@@ -101,7 +102,7 @@ export default function LoginScreen({ navigation }: any) {
 
 				await login(usuarioBiometriaSalvo, senhaSalva);
 				Alert.alert(t('common.success'), t('screens.login.signIn'));
-				navigation.navigate('Details');
+				// Navegação será controlada pelo listener de autenticação
 			} catch (error: any) {
 				Alert.alert(t('common.error'), error.message || t('screens.login.loginError'));
 			} finally {
@@ -117,7 +118,9 @@ export default function LoginScreen({ navigation }: any) {
 	const styles = createStyles(colors);
 
 	return (
-		<SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+		<>
+			<InputAccessoryView nativeID="loginSenhaAccessory"><View style={{ height: 0 }} /></InputAccessoryView>
+			<SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}> 
 			<KeyboardAvoidingView 
 				style={[styles.container, { backgroundColor: colors.background }]}
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -149,6 +152,8 @@ export default function LoginScreen({ navigation }: any) {
 										// Valida apenas se tiver @ e . (domínio completo)
 										setIsEmailValid(emailRegex.test(text));
 									}}
+									autoCorrect={false}
+									spellCheck={false}
 								/>
 								{isEmailValid && !getError('email') && (
 									<MaterialCommunityIcons name="check-circle" size={20} color={colors.success} style={styles.inputIcon} />
@@ -166,7 +171,7 @@ export default function LoginScreen({ navigation }: any) {
 									<Text style={[styles.forgotPasswordLink, { color: colors.primary }]}>{t('screens.login.forgotPassword')}</Text>
 								</TouchableOpacity>
 							</View>
-							<View style={[styles.inputWrapper, { borderColor: getError('password') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
+								<View style={[styles.inputWrapper, { borderColor: getError('password') ? colors.danger : colors.border, backgroundColor: colors.surface }]}> 
 								<TextInput
 									style={[styles.input, { color: colors.text }]}
 									placeholder="••••••••"
@@ -174,6 +179,10 @@ export default function LoginScreen({ navigation }: any) {
 									secureTextEntry={!showPassword}
 									value={senha}
 									onChangeText={setSenha}
+									autoCorrect={false}
+									spellCheck={false}
+									autoCapitalize="none"
+									inputAccessoryViewID="loginSenhaAccessory"
 								/>
 								<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
 									<MaterialCommunityIcons 
@@ -230,6 +239,7 @@ export default function LoginScreen({ navigation }: any) {
 				</ScrollView>
 			</KeyboardAvoidingView>
 		</SafeAreaView>
+		</>
 	);
 }
 

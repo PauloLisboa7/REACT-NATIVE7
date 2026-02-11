@@ -25,7 +25,7 @@ import { Language } from '../i18n/translations';
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }: any) {
-  const { userData } = useAuth();
+  const { userData, logout } = useAuth();
   const { colors, isDark, toggleTheme } = useTheme();
   const { t, language, setLanguage } = useLanguage();
   const [isPressed, setIsPressed] = useState<string | null>(null);
@@ -147,13 +147,28 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      
       <ScrollView 
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Settings Button */}
+        {/* Header controls: back arrow + settings */}
         <View style={styles.themeToggleContainer}>
+          <TouchableOpacity
+            style={[styles.themeToggleButton, { backgroundColor: colors.surfaceSecondary }]}
+            onPress={async () => {
+              try {
+                await logout();
+              } catch (err) {
+                console.error('Erro ao voltar para login:', err);
+              }
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.primary} />
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={[styles.themeToggleButton, { backgroundColor: colors.surfaceSecondary }]}
             onPress={() => setSettingsModalVisible(true)}
@@ -181,26 +196,6 @@ export default function HomeScreen({ navigation }: any) {
           <TouchableOpacity
             style={[
               styles.button,
-              styles.buttonRegister,
-              isPressed === 'register' && styles.buttonPressed,
-            ]}
-            onPress={() => navigation.navigate('Register')}
-            onPressIn={() => handlePressIn('register')}
-            onPressOut={handlePressOut}
-            activeOpacity={0.7}
-          >
-            <View style={styles.buttonIconWrapper}>
-              <MaterialCommunityIcons name="file-document-plus" size={32} color="#6366F1" />
-            </View>
-            <View style={styles.buttonContent}>
-              <Text style={styles.buttonTitle}>{t('screens.register.title')}</Text>
-              <Text style={styles.buttonSubtitle}>{t('screens.home.newUser')}</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.button,
               styles.buttonList,
               isPressed === 'list' && styles.buttonPressed,
             ]}
@@ -221,22 +216,24 @@ export default function HomeScreen({ navigation }: any) {
           <TouchableOpacity
             style={[
               styles.button,
-              styles.buttonLogin,
-              isPressed === 'login' && styles.buttonPressed,
+              styles.buttonAbout,
+              isPressed === 'details' && styles.buttonPressed,
             ]}
-            onPress={() => navigation.navigate('Login')}
-            onPressIn={() => handlePressIn('login')}
+            onPress={() => navigation.navigate('Details')}
+            onPressIn={() => handlePressIn('details')}
             onPressOut={handlePressOut}
             activeOpacity={0.7}
           >
             <View style={styles.buttonIconWrapper}>
-              <MaterialCommunityIcons name="lock" size={32} color="#F59E0B" />
+              <MaterialCommunityIcons name="information" size={32} color={colors.danger} />
             </View>
             <View style={styles.buttonContent}>
-              <Text style={styles.buttonTitle}>Login</Text>
-              <Text style={styles.buttonSubtitle}>{t('screens.home.loginAccess')}</Text>
+              <Text style={styles.buttonTitle}>Sobre o App</Text>
+              <Text style={styles.buttonSubtitle}>Informações do aplicativo</Text>
             </View>
           </TouchableOpacity>
+
+          {/* Login button removed — use top-left back arrow to return to Login */}
         </View>
       </ScrollView>
 
@@ -477,8 +474,12 @@ const createStyles = (colors: any, spacing: any) =>
       paddingVertical: spacing.lg,
     },
     themeToggleContainer: {
-      alignItems: 'flex-end',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: spacing.md,
+      width: '100%',
+      paddingHorizontal: spacing.md,
     },
     themeToggleButton: {
       width: 50,
@@ -546,10 +547,12 @@ const createStyles = (colors: any, spacing: any) =>
       borderLeftWidth: 4,
       borderLeftColor: colors.success,
     },
-    buttonLogin: {
+    buttonAbout: {
       borderLeftWidth: 4,
-      borderLeftColor: colors.warning,
+      borderLeftColor: colors.danger,
     },
+    
+    
     buttonIconWrapper: {
       width: 56,
       height: 56,

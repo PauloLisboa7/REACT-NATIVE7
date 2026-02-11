@@ -76,12 +76,12 @@ export default function EditProfileScreen({ navigation }: any) {
         { text: t('common.cancel'), onPress: () => {}, style: 'cancel' },
         {
           text: t('screens.editProfile.logout'),
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await logout();
-              navigation.navigate('Home');
-            } catch (error: any) {
+              onPress: async () => {
+            	try {
+            		setLoading(true);
+            		await logout();
+            		// Navegação será controlada pelo listener de autenticação
+            	} catch (error: any) {
               Alert.alert(t('common.error'), t('screens.editProfile.errorLogout'));
             } finally {
               setLoading(false);
@@ -128,7 +128,10 @@ export default function EditProfileScreen({ navigation }: any) {
                   value={nome}
                   onChangeText={setNome}
                   editable={!loading}
+                  autoCorrect={false}
+                  spellCheck={false}
                 />
+                
                 {nome && !getError('name') && (
                   <MaterialCommunityIcons name="check-circle" size={20} color={colors.success} style={styles.inputIcon} />
                 )}
@@ -150,6 +153,8 @@ export default function EditProfileScreen({ navigation }: any) {
                   value={age}
                   onChangeText={setAge}
                   editable={!loading}
+                  autoCorrect={false}
+                  spellCheck={false}
                 />
                 {age && !getError('age') && (
                   <MaterialCommunityIcons name="check-circle" size={20} color={colors.success} style={styles.inputIcon} />
