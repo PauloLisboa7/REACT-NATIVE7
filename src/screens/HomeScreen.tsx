@@ -3,6 +3,12 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from
 import { MaterialIcons, Feather } from '@expo/vector-icons';
 import { theme, spacing, fontSizes, colors, screenWidth, responsiveScale, isWeb, isAndroid } from '../config/theme';
 
+/**
+ * HomeScreen - Tela Inicial da Aplicação Autenticada
+ * 
+ * Esta é uma rota privada que só é acessível para usuários autenticados.
+ * Se o usuário fizer logout, será automaticamente redirecionado para AuthStack.
+ */
 export default function HomeScreen({ navigation }: any) {
   useEffect(() => {
     console.log('HomeScreen montado');
@@ -60,19 +66,11 @@ export default function HomeScreen({ navigation }: any) {
         )}
 
         {renderMenuItem(
-          <MaterialIcons name="person-add" size={responsiveScale(28)} color={colors.white} />,
-          'Cadastro',
-          'Crie sua nova conta',
-          () => navigation.navigate('Register'),
-          colors.success
-        )}
-
-        {renderMenuItem(
-          <Feather name="log-in" size={responsiveScale(28)} color={colors.white} />,
-          'Login',
-          'Entre em sua conta',
-          () => navigation.navigate('LoginSignup'),
-          colors.warning
+          <MaterialIcons name="person" size={responsiveScale(28)} color={colors.white} />,
+          'Minha Conta',
+          'Visualize seu perfil e faça logout',
+          () => navigation.navigate('Login'),
+          '#FF6B6B'
         )}
       </View>
 
@@ -80,7 +78,7 @@ export default function HomeScreen({ navigation }: any) {
       <View style={styles.footerContainer}>
         <MaterialIcons name="security" size={responsiveScale(20)} color={colors.primary} />
         <Text style={styles.footerText}>
-          Seus dados estão seguros com Firebase
+          Você está autenticado e protegido
         </Text>
       </View>
     </ScrollView>
