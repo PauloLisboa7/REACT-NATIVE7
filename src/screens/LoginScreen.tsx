@@ -2,22 +2,17 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { login, register, logout, onAuthChange, AuthUser } from '../services/authService';
+import { MaterialIcons } from '@expo/vector-icons';
+import { logout, onAuthChange, AuthUser } from '../services/authService';
+import { colors, spacing, fontSizes, responsiveScale, isWeb, screenWidth, isAndroid } from '../config/theme';
 
-interface LoginScreenProps {
-  navigation: any;
-}
-
-export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function LoginScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
 
@@ -30,44 +25,6 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
     return () => unsubscribe();
   }, []);
-
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Aviso', 'Preencha email e senha');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await login(email, password);
-      Alert.alert('Sucesso', 'Login realizado com sucesso!');
-      setEmail('');
-      setPassword('');
-    } catch (error: any) {
-      Alert.alert('Erro', error?.message || 'Falha ao fazer login');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Aviso', 'Preencha email e senha');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await register(email, password, 'Usuário');
-      Alert.alert('Sucesso', 'Conta criada com sucesso! Você já está autenticado.');
-      setEmail('');
-      setPassword('');
-    } catch (error: any) {
-      Alert.alert('Erro', error?.message || 'Falha ao criar conta');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLogout = async () => {
     setLoading(true);
@@ -87,8 +44,15 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   if (user) {
     return (
-      <ScrollView style={styles.container}>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.card}>
+          <View style={styles.iconContainer}>
+            <MaterialIcons name="person" size={responsiveScale(40)} color={colors.white} />
+          </View>
           <Text style={styles.title}>Bem-vindo! 👋</Text>
           <Text style={styles.email}>{user.email}</Text>
           <Text style={styles.uid}>ID: {user.uid.substring(0, 12)}...</Text>
@@ -99,9 +63,12 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.white} />
             ) : (
-              <Text style={styles.buttonText}>Desconectar</Text>
+              <>
+                <MaterialIcons name="logout" size={responsiveScale(20)} color={colors.white} />
+                <Text style={styles.buttonText}>Desconectar</Text>
+              </>
             )}
           </TouchableOpacity>
         </View>
@@ -109,148 +76,81 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     );
   }
 
-  return (
-    <ScrollView style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Login / Registro</Text>
-        <Text style={styles.subtitle}>Autentique-se com Firebase</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          editable={!loading}
-          placeholderTextColor="#999"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!loading}
-          placeholderTextColor="#999"
-        />
-
-        <TouchableOpacity
-          style={[styles.button, styles.loginButton]}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Login</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, styles.registerButton]}
-          onPress={handleRegister}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Criar Conta</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.forgotPasswordButton}
-          onPress={() => navigation.navigate('ForgotPassword')}
-          disabled={loading}
-        >
-          <Text style={styles.forgotPasswordText}>Esqueci minha senha</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-  );
+  // Se não há usuário, retorna empty (não acontece pois LoginScreen é privado)
+  return null;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
+    backgroundColor: colors.light,
+  },
+  scrollContent: {
+    paddingBottom: spacing.lg,
+    alignItems: isWeb ? 'center' : 'stretch',
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 24,
-    marginTop: 40,
+    backgroundColor: colors.white,
+    borderRadius: responsiveScale(10),
+    padding: spacing.md,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    width: isWeb ? Math.min(500, screenWidth * 0.9) : isAndroid ? '100%' : '100%',
+    alignSelf: isWeb ? 'center' : undefined,
+  },
+  iconContainer: {
+    width: responsiveScale(50),
+    height: responsiveScale(50),
+    borderRadius: responsiveScale(25),
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: spacing.md,
   },
   title: {
-    fontSize: 24,
+    fontSize: fontSizes.lg,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: spacing.xs,
     textAlign: 'center',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    color: colors.text,
   },
   button: {
-    padding: 14,
-    borderRadius: 8,
+    flexDirection: 'row',
+    padding: spacing.md,
+    borderRadius: responsiveScale(8),
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  loginButton: {
-    backgroundColor: '#007AFF',
-  },
-  registerButton: {
-    backgroundColor: '#34C759',
+    justifyContent: 'center',
+    marginTop: spacing.md,
+    gap: spacing.xs,
+    width: '100%',
   },
   logoutButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#8B0000',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: colors.white,
+    fontSize: fontSizes.sm,
+    fontWeight: 'bold',
   },
   email: {
-    fontSize: 16,
+    fontSize: fontSizes.md,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     textAlign: 'center',
-    marginBottom: 8,
-  },
-  forgotPasswordButton: {
-    marginTop: 12,
-    alignItems: 'center',
-  },
-  forgotPasswordText: {
-    color: '#007AFF',
-    fontSize: 14,
-    fontWeight: '600',
+    marginBottom: spacing.xs,
   },
   uid: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: fontSizes.xs,
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.md,
     fontFamily: 'monospace',
   },
 });

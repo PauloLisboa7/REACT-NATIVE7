@@ -60,7 +60,7 @@ export default function RegisterScreen({ navigation }: any) {
         phone,
       });
 
-      Alert.alert('Sucesso', 'Conta criada com sucesso! Você será redirecionado para login.');
+      Alert.alert('Sucesso', 'Conta criada com sucesso! Bem-vindo ao app!');
 
       setName('');
       setEmail('');
@@ -69,9 +69,11 @@ export default function RegisterScreen({ navigation }: any) {
       setPassword('');
       setConfirmPassword('');
 
+      // Aguarda o AppNavigator renderizar AppStack (após onAuthStateChanged dispara)
+      // e então navega para Details
       setTimeout(() => {
-        navigation.navigate('LoginSignup');
-      }, 500);
+        navigation.navigate('Details');
+      }, 1000);
     } catch (error: any) {
       const errorMsg = error?.message || 'Erro desconhecido';
       console.error('❌ Erro ao registrar usuário:', errorMsg);

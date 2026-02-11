@@ -29,6 +29,12 @@ export default function LoginSignupScreen({ navigation }: any) {
       setEmail('');
       setPassword('');
       setConfirmPassword('');
+
+      // Aguarda o AppNavigator renderizar AppStack (após onAuthStateChanged dispara)
+      // e então navega para Details
+      setTimeout(() => {
+        navigation.navigate('Details');
+      }, 1000);
     } catch (error: any) {
       Alert.alert('Erro', error?.message || 'Falha ao fazer login');
     } finally {
