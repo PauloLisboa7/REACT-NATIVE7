@@ -15,34 +15,26 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [language, setLanguageState] = useState<Language>('pt');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carregar idioma salvo ou detectar automático
   useEffect(() => {
-    loadLanguage();
-  }, []);
-
-  const loadLanguage = async () => {
-    try {
-      const savedLanguage = await AsyncStorage.getItem('appLanguage');
-      if (savedLanguage === 'en' || savedLanguage === 'pt' || savedLanguage === 'es') {
-        setLanguageState(savedLanguage);
-      } else {
-        // Detectar idioma do dispositivo
-        const deviceLanguage = Localization.getLocales()[0]?.languageCode;
-        if (deviceLanguage === 'en') {
-          setLanguageState('en');
-        } else if (deviceLanguage === 'es') {
-          setLanguageState('es');
+    const loadLanguage = async () => {
+      try {
+        const savedLanguage = await AsyncStorage.getItem('appLanguage');
+        
+        if (savedLanguage === 'en' || savedLanguage === 'pt' || savedLanguage === 'es') {
+          setLanguageState(savedLanguage as Language);
         } else {
           setLanguageState('pt');
         }
+      } catch (error) {
+        console.error('Erro ao carregar idioma:', error);
+        setLanguageState('pt');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Erro ao carregar idioma:', error);
-      setLanguageState('pt');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    loadLanguage();
+  }, []);
 
   const setLanguage = async (newLanguage: Language) => {
     try {
@@ -54,7 +46,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Função para traduzir usando notação de ponto (ex: 'screens.home.title')
   const t = (key: string): string => {
     const keys = key.split('.');
     let value: any = translations[language];
@@ -63,7 +54,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
-        return key; // Retorna a chave se não encontrar
+        return key;
       }
     }
 
@@ -71,7 +62,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   if (isLoading) {
-    return null; // Ou um splash screen
+    return null;
   }
 
   return (

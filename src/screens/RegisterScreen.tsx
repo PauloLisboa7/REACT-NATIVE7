@@ -74,33 +74,6 @@ export default function RegisterScreen({ navigation }: any) {
     };
   }, [navigation]);
 
-  // If the system autofills the password, force focus so keyboard appears and user can edit
-  useEffect(() => {
-    if (senha !== '' && !senhaFocused) {
-      const t = setTimeout(() => {
-        try {
-          senhaRef.current?.focus();
-        } catch (e) {
-          // ignore
-        }
-      }, 100);
-      return () => clearTimeout(t);
-    }
-  }, [senha, senhaFocused]);
-
-  useEffect(() => {
-    if (confirmSenha !== '' && !confirmFocused) {
-      const t = setTimeout(() => {
-        try {
-          confirmSenhaRef.current?.focus();
-        } catch (e) {
-          // ignore
-        }
-      }, 100);
-      return () => clearTimeout(t);
-    }
-  }, [confirmSenha, confirmFocused]);
-
   const handleRegister = async () => {
     clearAllErrors();
     setPasswordMismatchError(false);
@@ -176,7 +149,7 @@ export default function RegisterScreen({ navigation }: any) {
             <MaterialCommunityIcons name="account-plus" size={56} color={colors.primary} />
             <Text style={[styles.title, { color: colors.text }]}>{t('screens.register.title')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              {usersCount === null ? 'Carregando...' : `${usersCount} usuário${usersCount === 1 ? '' : 's'} cadastrad${usersCount === 1 ? 'o' : 'os'}`}
+              {usersCount === null ? t('screens.register.loading') : `${usersCount} usuário${usersCount === 1 ? '' : 's'} cadastrad${usersCount === 1 ? 'o' : 'os'}`}
             </Text>
           </View>
 
@@ -236,7 +209,7 @@ export default function RegisterScreen({ navigation }: any) {
                 <Text style={[styles.errorText, { color: colors.danger }]}>{getError('email')}</Text>
               )}
               {emailDuplicateError && (
-                <Text style={[styles.errorText, { color: colors.danger }]}>Email já cadastrado no sistema</Text>
+                <Text style={[styles.errorText, { color: colors.danger }]}>{t('screens.register.emailDuplicate')}</Text>
               )}
             </View>
 
@@ -302,7 +275,7 @@ export default function RegisterScreen({ navigation }: any) {
 
             {/* Confirmar Senha */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Confirmar Senha</Text>
+              <Text style={[styles.label, { color: colors.text }]}>{t('screens.register.confirmPasswordLabel')}</Text>
               <View>
                 <View style={[styles.inputWrapper, passwordMismatchError && { borderColor: colors.danger }, { backgroundColor: colors.surface, borderColor: getError('password') ? colors.danger : colors.border }]}>
                   <TextInput
@@ -335,10 +308,10 @@ export default function RegisterScreen({ navigation }: any) {
                 </View>
               </View>
               {passwordMismatchError && (
-                <Text style={[styles.errorText, { color: colors.danger }]}>⚠️ As senhas não conferem</Text>
+                <Text style={[styles.errorText, { color: colors.danger }]}>⚠️ {t('screens.register.passwordMismatch')}</Text>
               )}
               {!passwordMismatchError && confirmSenha && senha === confirmSenha && (
-                <Text style={[styles.successText, { color: colors.success }]}>✓ Senhas conferem</Text>
+                <Text style={[styles.successText, { color: colors.success }]}>{t('screens.register.passwordsMatch')}</Text>
               )}
             </View>
 
@@ -353,16 +326,16 @@ export default function RegisterScreen({ navigation }: any) {
               ) : (
                 <>
                   <MaterialCommunityIcons name="account-plus" size={20} color="#fff" style={styles.buttonIcon} />
-                  <Text style={styles.buttonText}>Cadastrar</Text>
+                  <Text style={styles.buttonText}>{t('screens.register.signUp')}</Text>
                 </>
               )}
             </TouchableOpacity>
 
             {/* Link para Login */}
             <View style={styles.footer}>
-              <Text style={[styles.footerText, { color: colors.textSecondary }]}>Já tem conta?</Text>
+              <Text style={[styles.footerText, { color: colors.textSecondary }]}>{t('screens.register.haveAccount')}</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={[styles.loginLink, { color: colors.primary }]}>Faça login aqui</Text>
+                <Text style={[styles.loginLink, { color: colors.primary }]}>{t('screens.register.loginHere')}</Text>
               </TouchableOpacity>
             </View>
           </View>

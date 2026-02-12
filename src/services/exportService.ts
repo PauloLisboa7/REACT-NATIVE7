@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { UserData } from './firebaseFirestoreService';
 
@@ -25,13 +25,10 @@ export const exportUsersAsCSV = async (users: UserData[]): Promise<string> => {
     ].join('\n');
 
     const fileName = `usuarios_${new Date().getTime()}.csv`;
-    const filePath = `${FileSystem.documentDirectory}${fileName}`;
+    const file = new File(Paths.cache, fileName);
+    file.write(csvContent);
 
-    await FileSystem.writeAsStringAsync(filePath, csvContent, {
-      encoding: FileSystem.EncodingType.UTF8,
-    });
-
-    return filePath;
+    return file.uri;
   } catch (error: any) {
     throw new Error(`Erro ao exportar CSV: ${error.message}`);
   }
@@ -45,13 +42,10 @@ export const exportUsersAsJSON = async (users: UserData[]): Promise<string> => {
     const jsonContent = JSON.stringify(users, null, 2);
 
     const fileName = `usuarios_${new Date().getTime()}.json`;
-    const filePath = `${FileSystem.documentDirectory}${fileName}`;
+    const file = new File(Paths.cache, fileName);
+    file.write(jsonContent);
 
-    await FileSystem.writeAsStringAsync(filePath, jsonContent, {
-      encoding: FileSystem.EncodingType.UTF8,
-    });
-
-    return filePath;
+    return file.uri;
   } catch (error: any) {
     throw new Error(`Erro ao exportar JSON: ${error.message}`);
   }
@@ -127,13 +121,10 @@ ${i + 1}. ${u.name}
 `;
 
     const fileName = `relatorio_usuarios_${new Date().getTime()}.txt`;
-    const filePath = `${FileSystem.documentDirectory}${fileName}`;
+    const file = new File(Paths.cache, fileName);
+    file.write(content);
 
-    await FileSystem.writeAsStringAsync(filePath, content, {
-      encoding: FileSystem.EncodingType.UTF8,
-    });
-
-    return filePath;
+    return file.uri;
   } catch (error: any) {
     throw new Error(`Erro ao gerar relatório: ${error.message}`);
   }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -114,17 +114,17 @@ export default function HomeScreen({ navigation }: any) {
     );
   };
 
-  const mudarIdioma = async (novoIdioma: Language) => {
+  const mudarIdioma = useCallback(async (novoIdioma: Language) => {
     try {
       await setLanguage(novoIdioma);
       await sendLocalNotification({
-        title: t('common.language'),
-        body: 'Idioma alterado com sucesso',
+        title: 'Idioma alterado',
+        body: `Idioma alterado para ${novoIdioma}`,
       });
     } catch (erro) {
       console.error('Erro ao alterar idioma:', erro);
     }
-  };
+  }, [setLanguage]);
 
   const handlePressIn = (id: string) => {
     setIsPressed(id);
@@ -228,8 +228,7 @@ export default function HomeScreen({ navigation }: any) {
               <MaterialCommunityIcons name="information" size={32} color={colors.danger} />
             </View>
             <View style={styles.buttonContent}>
-              <Text style={styles.buttonTitle}>Sobre o App</Text>
-              <Text style={styles.buttonSubtitle}>Informações do aplicativo</Text>
+              <Text style={styles.buttonTitle}>{t('screens.settings.aboutApp')}</Text>
             </View>
           </TouchableOpacity>
 

@@ -437,10 +437,19 @@ export default function ListScreen({ navigation }: any) {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.titulo, { color: colors.text }]}>{t('screens.list.title')}</Text>
-        <Text style={[styles.contador, { color: colors.textSecondary }]}>
-          {usuariosFiltrados.length} de {usuarios.length}
-        </Text>
+        <TouchableOpacity
+          onPress={() => navigation.popToTop()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={[styles.arrowButton, { backgroundColor: colors.surfaceSecondary }]}
+        >
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.primary} />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={[styles.titulo, { color: colors.text }]}>{t('screens.list.title')}</Text>
+          <Text style={[styles.contador, { color: colors.textSecondary }]}>
+            {usuarios.length} usuários cadastrados
+          </Text>
+        </View>
       </View>
 
       <View style={[styles.searchContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
@@ -534,7 +543,14 @@ export default function ListScreen({ navigation }: any) {
 function createStyles(colors: any) {
   return StyleSheet.create({
     container: { flex: 1 },
-    header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 },
+    header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 20, flexDirection: 'column', alignItems: 'flex-start', gap: 16 },
+    arrowButton: {
+      width: 50,
+      height: 50,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
     titulo: { fontSize: 28, fontWeight: '700', marginBottom: 4 },
     contador: { fontSize: 14, fontWeight: '500' },
     searchContainer: {

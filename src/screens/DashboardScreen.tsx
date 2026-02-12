@@ -92,10 +92,19 @@ export default function DashboardScreen({ navigation }: any) {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Dashboard</Text>
-          <TouchableOpacity onPress={carregarDados}>
-            <MaterialCommunityIcons name="refresh" size={24} color={colors.primary} />
+          <TouchableOpacity
+            onPress={() => navigation.popToTop()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={[styles.arrowButton, { backgroundColor: colors.surfaceSecondary }]}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.primary} />
           </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <Text style={[styles.title, { color: colors.text }]}>Dashboard</Text>
+            <TouchableOpacity onPress={carregarDados}>
+              <MaterialCommunityIcons name="refresh" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Stats Cards */}
@@ -267,10 +276,23 @@ function createStyles(colors: any) {
       paddingBottom: 32,
     },
     header: {
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      marginBottom: 24,
+      gap: 16,
+    },
+    arrowButton: {
+      width: 50,
+      height: 50,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerContent: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 24,
+      width: '100%',
     },
     title: {
       fontSize: 28,

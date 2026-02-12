@@ -80,9 +80,9 @@ export default function ForgotPasswordScreen({ navigation }: any) {
 
           <View style={styles.headerContainer}>
             <MaterialCommunityIcons name="lock-reset" size={56} color={colors.primary} />
-            <Text style={[styles.title, { color: colors.text }]}>Recuperar Senha</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('screens.forgotPassword.title')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Digite seu email para receber instruções de reset
+              {t('screens.forgotPassword.subtitle')}
             </Text>
           </View>
 
@@ -93,21 +93,21 @@ export default function ForgotPasswordScreen({ navigation }: any) {
                 size={80} 
                 color={colors.success} 
               />
-              <Text style={[styles.successTitle, { color: colors.text }]}>Email Enviado!</Text>
+              <Text style={[styles.successTitle, { color: colors.text }]}>{t('screens.forgotPassword.emailSent')}</Text>
               <Text style={[styles.successText, { color: colors.textSecondary }]}>
-                Verifique sua caixa de entrada e siga as instruções para resetar sua senha.
+                {t('screens.forgotPassword.successMessage')}
               </Text>
               <TouchableOpacity 
                 style={[styles.button, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
                 onPress={handleBackToLogin}
               >
-                <Text style={styles.buttonText}>Voltar ao Login</Text>
+                <Text style={styles.buttonText}>{t('screens.forgotPassword.goBack')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.formContainer}>
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+                <Text style={[styles.label, { color: colors.text }]}>{t('screens.login.email')}</Text>
                 <View style={[styles.inputWrapper, { borderColor: getError('email') ? colors.danger : colors.border, backgroundColor: colors.surface }]}>
                   <TextInput
                     style={[styles.input, { color: colors.text }]}
@@ -154,7 +154,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
                       color="#fff" 
                       style={styles.buttonIcon}
                     />
-                    <Text style={styles.buttonText}>Enviar Email</Text>
+                    <Text style={styles.buttonText}>{t('screens.forgotPassword.sendLink')}</Text>
                   </>
                 )}
               </TouchableOpacity>
